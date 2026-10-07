@@ -5,6 +5,12 @@ dotenv.config();
 import app from './app.js';
 import { sequelize } from './shared/db.js';
 import { User } from './models/User.js';
+import { GridModel } from './models/GridModel.js';
+import { UpdateRequest } from './models/UpdateRequest.js';
+import { Update } from './models/Update.js';
+import { Execution} from './models/Execution.js';
+import './models/associations.js';
+
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
@@ -15,7 +21,11 @@ async function start() {
         console.log('Database connected successfully');
 
         await User.sync();
-
+        await GridModel.sync();
+        await UpdateRequest.sync();
+        await Update.sync();
+        await Execution.sync();
+        
         console.log('Database synchronized successfully');
 
 
