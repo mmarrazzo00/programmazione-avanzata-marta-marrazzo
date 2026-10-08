@@ -94,11 +94,15 @@ async updateCredit(
     credit: number
 ): Promise<User> {
 
+    console.log('Updating credit:', {email, amount: credit});
+
     const user = await this.userDAO.updateCredit(email, credit);
 
     if (!user) {
         throw new HttpError(404, 'User not found');
     }
+
+    console.log('Credit updated successfully:', {email, amount: credit});
 
     return user;
 }

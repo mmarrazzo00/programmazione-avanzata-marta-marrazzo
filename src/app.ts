@@ -1,6 +1,8 @@
 import express from 'express';
 import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import gridModelRoutes from './routes/gridModelRoutes.js';
+import updateRequestRoutes from './routes/updateRequestRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -13,6 +15,8 @@ app.get('/health', (_req, res) => {
 
 app.use(userRoutes);
 app.use(authRoutes);
+app.use(gridModelRoutes);
+app.use(updateRequestRoutes);
 
 // Middleware 404
 app.use(notFound);
