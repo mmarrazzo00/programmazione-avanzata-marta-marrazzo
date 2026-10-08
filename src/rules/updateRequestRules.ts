@@ -24,3 +24,13 @@ export const createUpdateRequestRules = [
         .isInt({ min: 0, max: 1 })
         .withMessage('newValue must be 0 or 1'),
 ];
+
+export const updateRequestDecisionRules = [
+    param('requestId')
+        .isInt({ min: 1 })
+        .withMessage('requestId must be a positive integer'),
+
+ body('accept')
+        .custom(value => typeof value === 'boolean')
+        .withMessage('accept must be a boolean')
+];

@@ -7,7 +7,7 @@ import {
 
 import { UpdateRequestController } from '../controllers/UpdateRequestController.js';
 import { verifyJwt } from '../middleware/verifyJwt.js';
-import { createUpdateRequestRules } from '../rules/updateRequestRules.js';
+import { createUpdateRequestRules, updateRequestDecisionRules } from '../rules/updateRequestRules.js';
 import { validate } from '../middleware/validate.js';
 
 
@@ -23,6 +23,15 @@ router.post(
     validate,
     (req: Request, res: Response, next: NextFunction) =>
         updateRequestController.create(req, res, next)
+);
+
+router.patch(
+    '/update-requests/:requestId/decision',
+    verifyJwt,
+    updateRequestDecisionRules,
+    validate,
+    (req: Request, res: Response, next: NextFunction) =>
+        updateRequestController.decide(req, res, next)
 );
 
 export default router;
