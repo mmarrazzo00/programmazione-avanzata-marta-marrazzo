@@ -1,4 +1,3 @@
-
 import { Request, Response, NextFunction } from 'express';
 import { UpdateRequestService } from '../services/UpdateRequestService.js';
 
@@ -51,4 +50,31 @@ export class UpdateRequestController {
             next(error);
         }
     }
+
+    async getUpdates(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const modelId = String(req.params.modelId);
+
+            const FROM = req.query.FROM as string | undefined;
+            const TO = req.query.TO as string | undefined;
+            const STATUS = req.query.STATUS as string | undefined;
+
+            const result =
+                await this.updateRequestService.getUpdates(
+                    modelId,
+                    FROM,
+                    TO,
+                    STATUS
+                );
+
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
 }

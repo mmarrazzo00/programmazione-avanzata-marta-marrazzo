@@ -5,7 +5,8 @@ import { HttpError } from '../middleware/errorHandler.js';
 import { Update } from '../models/Update.js';
 import { UpdateRequest } from '../models/UpdateRequest.js';
 import { sequelize } from '../shared/db.js';
-import { Transaction } from 'sequelize';
+import { Transaction, WhereOptions } from 'sequelize';
+import { Op } from 'sequelize';
 
 export interface CellUpdate {
     row: number;
@@ -383,4 +384,80 @@ export class UpdateRequestService {
             newValue: update.newValue
         }));
     }
+
+
+    async getUpdates(
+        modelId: string,
+        FROM?: string,
+        TO?: string,
+        STATUS?: string
+    ) {
+        // Recupera tutte le versioni del modello logico
+        const versions = await GridModel.findAll({
+            where: { modelId },
+            attributes: ['id']
+        });
+
+        const versionIds = versions.map(version => version.id);
+
+        if (versionIds.length === 0) {
+            throw new HttpError(404, 'Model not found');
+        }
+
+        // Filtra le richieste per versione del modello
+        const where: WhereOptions = {
+            gridModelId: {
+                [Op.in]: versionIds
+            }
+        };
+
+        const dateFilter: Record<symbol, Date> = {};
+
+        if (FROM) {
+            dateFilter[Op.gte] = new Date(FROM);
+        }
+
+        if (TO) {
+            dateFilter[Op.lte] = new Date(TO);
+        }
+
+        if (FROM || TO) {
+            Object.assign(where, { createdAt: dateFilter });
+        }
+
+        if (STATUS) {
+            Object.assign(where, { status: STATUS });
+        }
+
+        // Recupera le richieste ordinate dalla più recente
+        const requests = await UpdateRequest.findAll({
+            where,
+            order: [['createdAt', 'DESC']]
+        });
+
+        // Per ogni richiesta recupera le modifiche alle singole celle
+        const result = await Promise.all(
+            requests.map(async request => {
+                const cellUpdates = await Update.findAll({
+                    where: {
+                        updateRequestId: request.id
+                    },
+                    attributes: [
+                        'row',
+                        'column',
+                        'oldValue',
+                        'newValue'
+                    ]
+                });
+
+                return {
+                    ...request.toJSON(),
+                    updates: cellUpdates.map(update => update.toJSON())
+                };
+            })
+        );
+
+        return result;
+    }
+
 }
