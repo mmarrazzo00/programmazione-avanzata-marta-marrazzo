@@ -3,6 +3,7 @@ import userRoutes from './routes/userRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import gridModelRoutes from './routes/gridModelRoutes.js';
 import updateRequestRoutes from './routes/updateRequestRoutes.js';
+import modelExecutionRoutes from './routes/modelExecutionRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(userRoutes);
 app.use(authRoutes);
 app.use(gridModelRoutes);
 app.use(updateRequestRoutes);
+app.use(modelExecutionRoutes);
 
 // Middleware 404
 app.use(notFound);
