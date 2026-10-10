@@ -37,14 +37,30 @@ export const updateRequestDecisionRules = [
         .withMessage('accept must be a boolean')
 ];
 
+
 export const updateHistoryRules = [
-    param('modelId').isString().notEmpty().withMessage('modelId is required'),
-    query('startDate').optional()
-        .isISO8601({ strict: true }).withMessage('startDate must be a valid ISO 8601 date'),
-    query('endDate')
-        .optional().
-        isISO8601({ strict: true })
-        .withMessage('endDate must be a valid ISO 8601 date'),
-    query('status')
-        .optional().isIn(['accepted', 'rejected', 'pending', 'auto'])
-        .withMessage('status must be accepted, rejected, pending or auto'),];
+    param('modelId')
+        .isString()
+        .notEmpty()
+        .withMessage('modelId is required'),
+    query('FROM')
+        .optional()
+        .isISO8601()
+        .withMessage('FROM must be a valid ISO 8601 date'),
+    query('TO')
+        .optional()
+        .isISO8601()
+        .withMessage('TO must be a valid ISO 8601 date'),
+    query('STATUS')
+        .optional()
+        .isIn(['accepted', 'rejected', 'pending', 'auto'])
+        .withMessage(
+            'STATUS must be accepted, rejected, pending or auto'
+        ),
+    query('DATE_TYPE')
+        .optional()
+        .isIn(['createdAt', 'updatedAt'])
+        .withMessage(
+            'DATE_TYPE must be createdAt or updatedAt'
+        )
+];

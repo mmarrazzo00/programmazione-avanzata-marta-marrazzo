@@ -386,11 +386,13 @@ export class UpdateRequestService {
     }
 
 
+
     async getUpdates(
         modelId: string,
         FROM?: string,
         TO?: string,
-        STATUS?: string
+        STATUS?: string,
+        DATE_TYPE: 'createdAt' | 'updatedAt' = 'createdAt'
     ) {
         // Recupera tutte le versioni del modello logico
         const versions = await GridModel.findAll({
@@ -404,38 +406,74 @@ export class UpdateRequestService {
             throw new HttpError(404, 'Model not found');
         }
 
-        // Filtra le richieste per versione del modello
+        // Filtra le richieste per tutte le versioni del modello
         const where: WhereOptions = {
             gridModelId: {
                 [Op.in]: versionIds
             }
         };
 
+        // Controlla che il tipo di data sia valido
+        if (DATE_TYPE !== 'createdAt' && DATE_TYPE !== 'updatedAt') {
+            throw new HttpError(400, 'Invalid date type');
+        }
+
+        // Costruisce il filtro temporale
         const dateFilter: Record<symbol, Date> = {};
 
         if (FROM) {
-            dateFilter[Op.gte] = new Date(FROM);
+            const fromDate = new Date(FROM);
+
+            if (Number.isNaN(fromDate.getTime())) {
+                throw new HttpError(400, 'Invalid FROM date');
+            }
+
+            dateFilter[Op.gte] = fromDate;
         }
 
         if (TO) {
-            dateFilter[Op.lte] = new Date(TO);
+            const toDate = new Date(TO);
+
+            if (Number.isNaN(toDate.getTime())) {
+                throw new HttpError(400, 'Invalid TO date');
+            }
+
+            dateFilter[Op.lte] = toDate;
+        }
+
+        if (FROM && TO && new Date(FROM) > new Date(TO)) {
+            throw new HttpError(400, 'FROM date must be before or equal to TO date');
         }
 
         if (FROM || TO) {
-            Object.assign(where, { createdAt: dateFilter });
+            Object.assign(where, {
+                [DATE_TYPE]: dateFilter
+            });
         }
 
+        // Filtra per stato, se specificato
         if (STATUS) {
+            const allowedStatuses = [
+                'accepted',
+                'rejected',
+                'pending',
+                'auto'
+            ];
+
+            if (!allowedStatuses.includes(STATUS)) {
+                throw new HttpError(400, 'Invalid status');
+            }
+
             Object.assign(where, { status: STATUS });
         }
 
         // Recupera le richieste ordinate dalla più recente
         const requests = await UpdateRequest.findAll({
             where,
-            order: [['createdAt', 'DESC']]
+            order: [[DATE_TYPE, 'DESC']]
         });
 
-        // Per ogni richiesta recupera le modifiche alle singole celle
+        // Recupera le modifiche alle singole celle di ogni richiesta
         const result = await Promise.all(
             requests.map(async request => {
                 const cellUpdates = await Update.findAll({
@@ -459,5 +497,6 @@ export class UpdateRequestService {
 
         return result;
     }
+
 
 }

@@ -9,6 +9,7 @@ import { UpdateRequestController } from '../controllers/UpdateRequestController.
 import { verifyJwt } from '../middleware/verifyJwt.js';
 import { createUpdateRequestRules, updateHistoryRules, updateRequestDecisionRules } from '../rules/updateRequestRules.js';
 import { validate } from '../middleware/validate.js';
+import { validateQueryParams } from '../middleware/validateQueryParams.js';
 
 
 const router = Router();
@@ -34,13 +35,21 @@ router.patch(
         updateRequestController.decide(req, res, next)
 );
 
+
 router.get(
     '/models/:modelId/updates',
     verifyJwt,
+    validateQueryParams([
+        'FROM',
+        'TO',
+        'STATUS',
+        'DATE_TYPE'
+    ]),
     updateHistoryRules,
     validate,
     (req: Request, res: Response, next: NextFunction) =>
         updateRequestController.getUpdates(req, res, next)
 );
+
 
 export default router;

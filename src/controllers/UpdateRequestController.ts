@@ -62,13 +62,18 @@ export class UpdateRequestController {
             const FROM = req.query.FROM as string | undefined;
             const TO = req.query.TO as string | undefined;
             const STATUS = req.query.STATUS as string | undefined;
+            const DATE_TYPE = req.query.DATE_TYPE as
+                | 'createdAt'
+                | 'updatedAt'
+                | undefined;
 
             const result =
                 await this.updateRequestService.getUpdates(
                     modelId,
                     FROM,
                     TO,
-                    STATUS
+                    STATUS,
+                    DATE_TYPE
                 );
 
             res.status(200).json(result);
@@ -76,5 +81,4 @@ export class UpdateRequestController {
             next(error);
         }
     }
-
 }
