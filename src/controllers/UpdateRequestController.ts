@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { UpdateRequestService } from '../services/UpdateRequestService.js';
+import { HttpError } from '../middleware/errorHandler.js';
 
 export class UpdateRequestController {
 
@@ -81,4 +82,51 @@ export class UpdateRequestController {
             next(error);
         }
     }
+
+
+    async getModelPendingStatus(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const modelId = String(req.params.modelId);
+
+            const result =
+                await this.updateRequestService.getModelPendingStatus(
+                    modelId
+                );
+
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getMyPendingRequests(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const userId = req.user!.userId;
+
+            if (!Number.isInteger(userId) || userId <= 0) {
+                throw new HttpError(401, 'Invalid authenticated user');
+            }
+
+            const result =
+                await this.updateRequestService.getMyPendingRequests(
+                    userId
+                );
+
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+
+
+
 }

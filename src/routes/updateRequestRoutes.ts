@@ -7,7 +7,7 @@ import {
 
 import { UpdateRequestController } from '../controllers/UpdateRequestController.js';
 import { verifyJwt } from '../middleware/verifyJwt.js';
-import { createUpdateRequestRules, updateHistoryRules, updateRequestDecisionRules } from '../rules/updateRequestRules.js';
+import { createUpdateRequestRules, updateHistoryRules, updateRequestDecisionRules, modelPendingStatusRules } from '../rules/updateRequestRules.js';
 import { validate } from '../middleware/validate.js';
 import { validateQueryParams } from '../middleware/validateQueryParams.js';
 
@@ -51,5 +51,30 @@ router.get(
         updateRequestController.getUpdates(req, res, next)
 );
 
+router.get(
+    '/models/:modelId/status',
+    verifyJwt,
+    modelPendingStatusRules,
+    validate,
+    (req: Request, res: Response, next: NextFunction) =>
+        updateRequestController.getModelPendingStatus(
+            req,
+            res,
+            next
+        )
+);
+
+
+
+router.get(
+    '/models/pending-requests',
+    verifyJwt,
+    (req: Request, res: Response, next: NextFunction) =>
+        updateRequestController.getMyPendingRequests(
+            req,
+            res,
+            next
+        )
+);
 
 export default router;

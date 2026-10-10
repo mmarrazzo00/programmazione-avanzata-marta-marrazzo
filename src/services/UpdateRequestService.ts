@@ -499,4 +499,96 @@ export class UpdateRequestService {
     }
 
 
+    async getModelPendingStatus(modelId: string) {
+
+        // Recupera tutte le versioni del modello
+        const versions = await GridModel.findAll({
+            where: { modelId },
+            attributes: ['id']
+        });
+
+        if (versions.length === 0) {
+            throw new HttpError(404, 'Model not found');
+        }
+
+        const versionIds = versions.map(version => version.id);
+
+        // Cerca le richieste ancora in attesa
+        const pendingRequests = await UpdateRequest.findAll({
+            where: {
+                gridModelId: {
+                    [Op.in]: versionIds
+                },
+                status: 'pending'
+            },
+            attributes: [
+                'id',
+                'userId',
+                'gridModelId',
+                'status',
+                'createdAt'
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        return {
+            modelId,
+            hasPendingRequests: pendingRequests.length > 0,
+            pendingCount: pendingRequests.length,
+            pendingRequests
+        };
+    }
+
+
+    async getMyPendingRequests(userId: number) {
+        // Recupera i modelli posseduti dall'utente
+        const models = await GridModel.findAll({
+            where: { ownerId: userId },
+            attributes: ['id', 'modelId', 'name', 'version']
+        });
+
+        const modelIds = models.map(model => model.id);
+
+        if (modelIds.length === 0) {
+            return [];
+        }
+
+        // Recupera le richieste pending dei suoi modelli
+        const pendingRequests = await UpdateRequest.findAll({
+            where: {
+                gridModelId: {
+                    [Op.in]: modelIds
+                },
+                status: 'pending'
+            },
+            order: [['createdAt', 'DESC']]
+        });
+
+        // Per ogni richiesta recupera le modifiche alle celle
+        const result = await Promise.all(
+            pendingRequests.map(async request => {
+                const updates = await Update.findAll({
+                    where: {
+                        updateRequestId: request.id
+                    },
+                    attributes: [
+                        'row',
+                        'column',
+                        'oldValue',
+                        'newValue',
+                        'createdAt'
+                    ]
+                });
+
+                return {
+                    ...request.toJSON(),
+                    updates: updates.map(update => update.toJSON())
+                };
+            })
+        );
+
+        return result;
+    }
+
+
 }

@@ -64,3 +64,10 @@ export const updateHistoryRules = [
             'DATE_TYPE must be createdAt or updatedAt'
         )
 ];
+
+export const modelPendingStatusRules = 
+[ param('modelId') 
+    .isString() 
+    .trim() 
+    .notEmpty() 
+    .withMessage('modelId is required') ];
