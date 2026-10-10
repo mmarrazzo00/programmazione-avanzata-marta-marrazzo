@@ -21,6 +21,11 @@ interface PreparedCellUpdate {
     newValue: number;
 }
 
+export interface CellDecision {
+    updateId: number;
+    decision: 'accepted' | 'rejected';
+}
+
 export class UpdateRequestService {
 
     private creditService = new CreditService();
@@ -386,7 +391,6 @@ export class UpdateRequestService {
     }
 
 
-
     async getUpdates(
         modelId: string,
         FROM?: string,
@@ -498,7 +502,7 @@ export class UpdateRequestService {
         return result;
     }
 
-
+    
     async getModelPendingStatus(modelId: string) {
 
         // Recupera tutte le versioni del modello
@@ -590,5 +594,215 @@ export class UpdateRequestService {
         return result;
     }
 
+    async splitUpdateRequest(
+        requestId: number,
+        ownerId: number,
+        decisions: CellDecision[]
+    ): Promise<{
+        originalRequest: UpdateRequest;
+        childRequests: UpdateRequest[];
+    }> {
+        if (!Array.isArray(decisions) || decisions.length === 0) {
+            throw new HttpError(400, 'At least one cell decision is required');
+        }
+
+        const updateIds = decisions.map(d => d.updateId);
+
+        if (
+            decisions.some(
+                d =>
+                    !Number.isInteger(d.updateId) ||
+                    d.updateId <= 0 ||
+                    !['accepted', 'rejected'].includes(d.decision)
+            ) ||
+            new Set(updateIds).size !== updateIds.length
+        ) {
+            throw new HttpError(400, 'Invalid or duplicated cell decisions');
+        }
+
+        const transaction = await sequelize.transaction();
+
+        try {
+            const request = await this.findPendingRequest(
+                requestId,
+                transaction
+            );
+
+            const model = await this.findRequestModel(
+                request.gridModelId,
+                transaction
+            );
+
+            this.checkModelOwner(model, ownerId);
+
+            // Conserviamo l'ID della versione originale per lo storico.
+            const originalGridModelId = model.id;
+
+            const updates = await Update.findAll({
+                where: { updateRequestId: request.id },
+                transaction,
+                lock: transaction.LOCK.UPDATE
+            });
+
+            if (updates.length === 0) {
+                throw new HttpError(400, 'No cell updates found for this request');
+            }
+
+            const updatesById = new Map(
+                updates.map(update => [update.id, update])
+            );
+
+            // Verifica che ogni decisione appartenga a questa richiesta.
+            for (const decision of decisions) {
+                if (!updatesById.has(decision.updateId)) {
+                    throw new HttpError(
+                        400,
+                        `Update ${decision.updateId} does not belong to this request`
+                    );
+                }
+            }
+
+            // Non è possibile lasciare modifiche senza una decisione.
+            if (decisions.length !== updates.length) {
+                throw new HttpError(
+                    400,
+                    'Every cell update must have a decision'
+                );
+            }
+
+            const decisionsById = new Map(
+                decisions.map(d => [d.updateId, d.decision])
+            );
+
+            const acceptedUpdates: Update[] = [];
+            const rejectedUpdates: Update[] = [];
+
+            for (const update of updates) {
+                const decision = decisionsById.get(update.id);
+
+                if (decision === 'accepted') {
+                    acceptedUpdates.push(update);
+                } else if (decision === 'rejected') {
+                    rejectedUpdates.push(update);
+                } else {
+                    throw new HttpError(
+                        400,
+                        `Missing decision for update ${update.id}`
+                    );
+                }
+            }
+
+            // Applichiamo e addebitiamo esclusivamente le modifiche accettate.
+            if (acceptedUpdates.length > 0) {
+                if (!model.valid) {
+                    throw new HttpError(
+                        409,
+                        'Cannot approve a request for an outdated model version'
+                    );
+                }
+
+                const acceptedCells =
+                    this.prepareStoredUpdates(acceptedUpdates);
+
+                for (const cell of acceptedCells) {
+                    const currentValue =
+                        model.matrix[cell.row]?.[cell.column];
+
+                    if (currentValue !== cell.oldValue) {
+                        throw new HttpError(
+                            409,
+                            'The requested cells have changed since the request was created'
+                        );
+                    }
+                }
+
+                const acceptedCost = this.calculateUpdateCost(
+                    acceptedUpdates.length
+                );
+
+                await this.consumeCredit(
+                    request.userId,
+                    acceptedCost,
+                    transaction
+                );
+
+                await this.applyDirectUpdate(
+                    model,
+                    acceptedCells,
+                    transaction
+                );
+            }
+
+            const childRequests: UpdateRequest[] = [];
+            const now = new Date();
+
+            const groups: {
+                updates: Update[];
+                status: 'accepted' | 'rejected';
+            }[] = [
+                    {
+                        updates: acceptedUpdates,
+                        status: 'accepted'
+                    },
+                    {
+                        updates: rejectedUpdates,
+                        status: 'rejected'
+                    }
+                ];
+
+            for (const group of groups) {
+                if (group.updates.length === 0) {
+                    continue;
+                }
+
+                const childCost = this.calculateUpdateCost(
+                    group.updates.length
+                );
+
+                const child = await UpdateRequest.create(
+                    {
+                        userId: request.userId,
+                        gridModelId: originalGridModelId,
+                        parentRequestId: request.id,
+                        cost: childCost,
+                        status: group.status,
+                        decidedAt: now
+                    },
+                    { transaction }
+                );
+
+                for (const update of group.updates) {
+                    await Update.create(
+                        {
+                            updateRequestId: child.id,
+                            row: update.row,
+                            column: update.column,
+                            oldValue: update.oldValue,
+                            newValue: update.newValue
+                        },
+                        { transaction }
+                    );
+                }
+
+                childRequests.push(child);
+            }
+
+            // La richiesta originale rimane nello storico.
+            request.status = 'split';
+            request.decidedAt = now;
+
+            await request.save({ transaction });
+
+            await transaction.commit();
+
+            return {
+                originalRequest: request,
+                childRequests
+            };
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
+    }
 
 }

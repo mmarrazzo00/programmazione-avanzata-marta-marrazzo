@@ -5,6 +5,7 @@ export class UpdateRequest extends Model {
     declare id: number;
     declare userId: number;
     declare gridModelId: number;
+    declare parentRequestId: number | null;
     declare cost: number;
     declare status: string;
     declare decidedAt: Date | null;
@@ -34,6 +35,17 @@ UpdateRequest.init(
                 model: 'grid_model',
                 key: 'id',
             },
+        },
+
+        parentRequestId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'update_request',
+                key: 'id',
+            },
+            onUpdate: 'CASCADE',
+            onDelete: 'RESTRICT',
         },
 
         cost: {

@@ -77,4 +77,11 @@ router.get(
         )
 );
 
+router.patch(
+    '/update-requests/:requestId/cell-decisions',
+    verifyJwt,
+    (req: Request, res: Response, next: NextFunction) =>
+        updateRequestController.decideCells(req, res, next)
+);
+
 export default router;

@@ -127,6 +127,54 @@ export class UpdateRequestController {
     }
 
 
+    async decideCells(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const requestId = Number(req.params.requestId);
+            const ownerId = req.user!.userId;
+            const { decisions } = req.body;
+
+            if (!Array.isArray(decisions) || decisions.length === 0) {
+                throw new HttpError(
+                    400,
+                    'At least one cell decision is required'
+                );
+            }
+
+            const allAccepted = decisions.every(
+                (d: { decision: string }) => d.decision === 'accepted'
+            );
+
+            const allRejected = decisions.every(
+                (d: { decision: string }) => d.decision === 'rejected'
+            );
+
+            let result;
+
+            if (allAccepted || allRejected) {
+                result =
+                    await this.updateRequestService.decideUpdateRequest(
+                        requestId,
+                        ownerId,
+                        allAccepted
+                    );
+            } else {
+                result =
+                    await this.updateRequestService.splitUpdateRequest(
+                        requestId,
+                        ownerId,
+                        decisions
+                    );
+            }
+
+            res.status(200).json(result);
+        } catch (error) {
+            next(error);
+        }
+    }
 
 
 }

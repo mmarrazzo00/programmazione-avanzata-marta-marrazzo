@@ -53,9 +53,9 @@ export const updateHistoryRules = [
         .withMessage('TO must be a valid ISO 8601 date'),
     query('STATUS')
         .optional()
-        .isIn(['accepted', 'rejected', 'pending', 'auto'])
+        .isIn(['accepted', 'rejected', 'pending', 'auto','split'])
         .withMessage(
-            'STATUS must be accepted, rejected, pending or auto'
+            'STATUS must be accepted, rejected, pending, auto or split'
         ),
     query('DATE_TYPE')
         .optional()
