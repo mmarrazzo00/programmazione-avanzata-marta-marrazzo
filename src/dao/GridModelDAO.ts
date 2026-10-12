@@ -51,4 +51,18 @@ export class GridModelDAO {
     ): Promise<void> {
         await model.save({ transaction });
     }
+
+    async findVersionsByModelId(modelId: string): Promise<GridModel[]> {
+        return GridModel.findAll({
+            where: { modelId },
+            attributes: ['id']
+        });
+    }
+
+    async findOwnedByUserId(userId: number): Promise<GridModel[]> {
+        return GridModel.findAll({
+            where: { ownerId: userId },
+            attributes: ['id', 'modelId', 'name', 'version']
+        });
+    }
 }

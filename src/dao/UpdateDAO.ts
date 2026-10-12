@@ -32,16 +32,17 @@ export class UpdateDAO {
     async findByRequestId(
         requestId: number,
         transaction?: Transaction,
-        lock = false
+        lock = false,
+        attributes?: string[]
     ): Promise<Update[]> {
         return Update.findAll({
-            where: {
-                updateRequestId: requestId
-            },
+            where: { updateRequestId: requestId },
+            ...(attributes ? { attributes } : {}),
             transaction,
             ...(lock && transaction
                 ? { lock: transaction.LOCK.UPDATE }
                 : {})
         });
     }
+
 }

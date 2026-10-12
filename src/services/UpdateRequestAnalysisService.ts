@@ -1,22 +1,13 @@
-
-import { GridModel } from '../models/GridModel.js';
 import { HttpError } from '../middleware/errorHandler.js';
-import { Update } from '../models/Update.js';
-import { UpdateRequest } from '../models/UpdateRequest.js';
-import { Op, WhereOptions } from 'sequelize';
-
-export interface CellUpdate {
-    row: number;
-    column: number;
-    newValue: number;
-}
-
-export interface CellDecision {
-    updateId: number;
-    decision: 'accepted' | 'rejected';
-}
+import { GridModelDAO } from '../dao/GridModelDAO.js';
+import { UpdateDAO } from '../dao/UpdateDAO.js';
+import { UpdateRequestDAO } from '../dao/UpdateRequestDAO.js';
 
 export class UpdateRequestAnalysisService {
+
+    private gridModelDAO = new GridModelDAO();
+    private updateDAO = new UpdateDAO();
+    private updateRequestDAO = new UpdateRequestDAO();
 
     async getUpdates(
         modelId: string,
@@ -25,64 +16,39 @@ export class UpdateRequestAnalysisService {
         STATUS?: string,
         DATE_TYPE: 'createdAt' | 'updatedAt' = 'createdAt'
     ) {
-        // Recupera tutte le versioni del modello logico
-        const versions = await GridModel.findAll({
-            where: { modelId },
-            attributes: ['id']
-        });
-
-        const versionIds = versions.map(version => version.id);
-
-        if (versionIds.length === 0) {
-            throw new HttpError(404, 'Model not found');
-        }
-
-        // Filtra le richieste per tutte le versioni del modello
-        const where: WhereOptions = {
-            gridModelId: {
-                [Op.in]: versionIds
-            }
-        };
-
-        // Controlla che il tipo di data sia valido
+        // Controlla il tipo di data
         if (DATE_TYPE !== 'createdAt' && DATE_TYPE !== 'updatedAt') {
             throw new HttpError(400, 'Invalid date type');
         }
 
-        // Costruisce il filtro temporale
-        const dateFilter: Record<symbol, Date> = {};
+        // Valida le date ricevute
+        let fromDate: Date | undefined;
+        let toDate: Date | undefined;
 
         if (FROM) {
-            const fromDate = new Date(FROM);
+            fromDate = new Date(FROM);
 
             if (Number.isNaN(fromDate.getTime())) {
                 throw new HttpError(400, 'Invalid FROM date');
             }
-
-            dateFilter[Op.gte] = fromDate;
         }
 
         if (TO) {
-            const toDate = new Date(TO);
+            toDate = new Date(TO);
 
             if (Number.isNaN(toDate.getTime())) {
                 throw new HttpError(400, 'Invalid TO date');
             }
-
-            dateFilter[Op.lte] = toDate;
         }
 
-        if (FROM && TO && new Date(FROM) > new Date(TO)) {
-            throw new HttpError(400, 'FROM date must be before or equal to TO date');
+        if (fromDate && toDate && fromDate > toDate) {
+            throw new HttpError(
+                400,
+                'FROM date must be before or equal to TO date'
+            );
         }
 
-        if (FROM || TO) {
-            Object.assign(where, {
-                [DATE_TYPE]: dateFilter
-            });
-        }
-
-        // Filtra per stato, se specificato
+        // Valida lo stato, se specificato
         if (STATUS) {
             const allowedStatuses = [
                 'accepted',
@@ -94,30 +60,44 @@ export class UpdateRequestAnalysisService {
             if (!allowedStatuses.includes(STATUS)) {
                 throw new HttpError(400, 'Invalid status');
             }
-
-            Object.assign(where, { status: STATUS });
         }
 
-        // Recupera le richieste ordinate dalla più recente
-        const requests = await UpdateRequest.findAll({
-            where,
-            order: [[DATE_TYPE, 'DESC']]
-        });
+        // Recupera gli ID di tutte le versioni del modello
+        const versions =
+            await this.gridModelDAO.findVersionsByModelId(modelId);
 
-        // Recupera le modifiche alle singole celle di ogni richiesta
+        const versionIds = versions.map(version => version.id);
+
+        if (versionIds.length === 0) {
+            throw new HttpError(404, 'Model not found');
+        }
+
+        // Recupera le richieste applicando i filtri
+        const requests = await this.updateRequestDAO.findByVersionIds(
+            versionIds,
+            {
+                fromDate,
+                toDate,
+                dateType: DATE_TYPE,
+                status: STATUS
+            }
+        );
+
+        // Recupera le modifiche delle celle per ogni richiesta
         const result = await Promise.all(
             requests.map(async request => {
-                const cellUpdates = await Update.findAll({
-                    where: {
-                        updateRequestId: request.id
-                    },
-                    attributes: [
-                        'row',
-                        'column',
-                        'oldValue',
-                        'newValue'
-                    ]
-                });
+                const cellUpdates =
+                    await this.updateDAO.findByRequestId(
+                        request.id,
+                        undefined,
+                        false,
+                        [
+                            'row',
+                            'column',
+                            'oldValue',
+                            'newValue'
+                        ]
+                    );
 
                 return {
                     ...request.toJSON(),
@@ -132,10 +112,8 @@ export class UpdateRequestAnalysisService {
     async getModelPendingStatus(modelId: string) {
 
         // Recupera tutte le versioni del modello
-        const versions = await GridModel.findAll({
-            where: { modelId },
-            attributes: ['id']
-        });
+        const versions =
+            await this.gridModelDAO.findVersionsByModelId(modelId);
 
         if (versions.length === 0) {
             throw new HttpError(404, 'Model not found');
@@ -143,23 +121,12 @@ export class UpdateRequestAnalysisService {
 
         const versionIds = versions.map(version => version.id);
 
-        // Cerca le richieste ancora in attesa
-        const pendingRequests = await UpdateRequest.findAll({
-            where: {
-                gridModelId: {
-                    [Op.in]: versionIds
-                },
-                status: 'pending'
-            },
-            attributes: [
-                'id',
-                'userId',
-                'gridModelId',
-                'status',
-                'createdAt'
-            ],
-            order: [['createdAt', 'DESC']]
-        });
+        // Recupera le richieste ancora in attesa
+        const pendingRequests =
+            await this.updateRequestDAO.findPendingByVersionIds(
+                versionIds,
+                true
+            );
 
         return {
             modelId,
@@ -170,11 +137,10 @@ export class UpdateRequestAnalysisService {
     }
 
     async getMyPendingRequests(userId: number) {
+
         // Recupera i modelli posseduti dall'utente
-        const models = await GridModel.findAll({
-            where: { ownerId: userId },
-            attributes: ['id', 'modelId', 'name', 'version']
-        });
+        const models =
+            await this.gridModelDAO.findOwnedByUserId(userId);
 
         const modelIds = models.map(model => model.id);
 
@@ -182,32 +148,26 @@ export class UpdateRequestAnalysisService {
             return [];
         }
 
-        // Recupera le richieste pending dei suoi modelli
-        const pendingRequests = await UpdateRequest.findAll({
-            where: {
-                gridModelId: {
-                    [Op.in]: modelIds
-                },
-                status: 'pending'
-            },
-            order: [['createdAt', 'DESC']]
-        });
+        // Recupera le richieste pending relative ai suoi modelli
+        const pendingRequests =
+            await this.updateRequestDAO.findPendingByVersionIds(modelIds);
 
-        // Per ogni richiesta recupera le modifiche alle celle
+        // Recupera le modifiche alle celle di ogni richiesta
         const result = await Promise.all(
             pendingRequests.map(async request => {
-                const updates = await Update.findAll({
-                    where: {
-                        updateRequestId: request.id
-                    },
-                    attributes: [
-                        'row',
-                        'column',
-                        'oldValue',
-                        'newValue',
-                        'createdAt'
-                    ]
-                });
+                const updates =
+                    await this.updateDAO.findByRequestId(
+                        request.id,
+                        undefined,
+                        false,
+                        [
+                            'row',
+                            'column',
+                            'oldValue',
+                            'newValue',
+                            'createdAt'
+                        ]
+                    );
 
                 return {
                     ...request.toJSON(),
@@ -218,4 +178,5 @@ export class UpdateRequestAnalysisService {
 
         return result;
     }
+
 }
