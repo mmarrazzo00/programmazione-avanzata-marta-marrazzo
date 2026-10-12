@@ -1,8 +1,11 @@
 import { User } from '../models/User.js';
 import { HttpError } from '../middleware/errorHandler.js';
 import { Transaction } from 'sequelize';
+import { UserDAO } from '../dao/UserDAO.js';
 
 export class CreditService {
+
+    private userDAO = new UserDAO();
 
 async checkAndConsume(
     userId: number,
@@ -10,9 +13,7 @@ async checkAndConsume(
     transaction?: Transaction
 ): Promise<void> {
 
-    const user = await User.findByPk(userId, {
-        transaction
-    });
+    const user = await this.userDAO.findById(userId, transaction);
 
     if (!user) {
         throw new HttpError(401, 'User not found');

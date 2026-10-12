@@ -6,6 +6,9 @@ import { Update } from '../models/Update.js';
 import { UpdateRequest } from '../models/UpdateRequest.js';
 import { sequelize } from '../shared/db.js';
 import { Transaction, WhereOptions } from 'sequelize';
+import { GridModelDAO } from '../dao/GridModelDAO.js';
+import { UpdateDAO } from '../dao/UpdateDAO.js';
+import { UpdateRequestDAO } from '../dao/UpdateRequestDAO.js';
 import { Op } from 'sequelize';
 
 export interface CellUpdate {
@@ -29,6 +32,9 @@ export interface CellDecision {
 export class UpdateRequestService {
 
     private creditService = new CreditService();
+    private gridModelDAO = new GridModelDAO();
+    private updateDAO = new UpdateDAO();
+    private updateRequestDAO = new UpdateRequestDAO();
 
     async createUpdateRequest(
         userId: number,
@@ -155,7 +161,7 @@ export class UpdateRequestService {
             throw error;
         }
     }
-    
+
     async splitUpdateRequest(
         requestId: number,
         ownerId: number,
@@ -200,11 +206,11 @@ export class UpdateRequestService {
             // Conserviamo l'ID della versione originale per lo storico.
             const originalGridModelId = model.id;
 
-            const updates = await Update.findAll({
-                where: { updateRequestId: request.id },
+            const updates = await this.updateDAO.findByRequestId(
+                request.id,
                 transaction,
-                lock: transaction.LOCK.UPDATE
-            });
+                true
+            );
 
             if (updates.length === 0) {
                 throw new HttpError(400, 'No cell updates found for this request');
@@ -321,7 +327,7 @@ export class UpdateRequestService {
                     group.updates.length
                 );
 
-                const child = await UpdateRequest.create(
+                const child = await this.updateRequestDAO.create(
                     {
                         userId: request.userId,
                         gridModelId: originalGridModelId,
@@ -330,7 +336,7 @@ export class UpdateRequestService {
                         status: group.status,
                         decidedAt: now
                     },
-                    { transaction }
+                    transaction
                 );
 
                 for (const update of group.updates) {
@@ -353,8 +359,7 @@ export class UpdateRequestService {
             request.status = 'split';
             request.decidedAt = now;
 
-            await request.save({ transaction });
-
+            await this.updateRequestDAO.save(request, transaction);
             await transaction.commit();
 
             return {
@@ -370,9 +375,8 @@ export class UpdateRequestService {
     private async findValidModel(
         modelId: string
     ): Promise<GridModel> {
-        const model = await GridModel.findOne({
-            where: { modelId, valid: true }
-        });
+        const model =
+            await this.gridModelDAO.findValidByModelId(modelId);
 
         if (!model) {
             throw new HttpError(404, 'Model not found');
@@ -461,24 +465,27 @@ export class UpdateRequestService {
         isOwner: boolean,
         transaction: Transaction
     ): Promise<UpdateRequest> {
+        const request = await this.updateRequestDAO.create(
+            {
+                userId,
+                gridModelId: model.id,
+                cost,
+                status: isOwner ? 'auto' : 'pending',
+                decidedAt: isOwner ? new Date() : null
+            },
+            transaction
+        );
 
-        const request = await UpdateRequest.create({
-            userId,
-            gridModelId: model.id,
-            cost,
-            status: isOwner ? 'auto' : 'pending',
-            decidedAt: isOwner ? new Date() : null
-        }, { transaction });
-
-        for (const cell of cellUpdates) {
-            await Update.create({
+        await this.updateDAO.createMany(
+            cellUpdates.map(cell => ({
                 updateRequestId: request.id,
                 row: cell.row,
                 column: cell.column,
                 oldValue: cell.oldValue,
                 newValue: cell.newValue
-            }, { transaction });
-        }
+            })),
+            transaction
+        );
 
         return request;
     }
@@ -495,32 +502,33 @@ export class UpdateRequestService {
         }
 
         model.valid = false;
-        await model.save({ transaction });
 
-        return GridModel.create({
-            modelId: model.modelId,
-            name: model.name,
-            ownerId: model.ownerId,
-            rows: model.rows,
-            columns: model.columns,
-            matrix: newMatrix,
-            version: model.version + 1,
-            valid: true
-        }, { transaction });
+        await this.gridModelDAO.save(model, transaction);
+
+        return this.gridModelDAO.create(
+            {
+                modelId: model.modelId,
+                name: model.name,
+                ownerId: model.ownerId,
+                rows: model.rows,
+                columns: model.columns,
+                matrix: newMatrix,
+                version: model.version + 1,
+                valid: true
+            },
+            transaction
+        );
     }
 
     private async findPendingRequest(
         requestId: number,
         transaction: Transaction
     ): Promise<UpdateRequest> {
-        const request = await UpdateRequest.findOne({
-            where: {
-                id: requestId,
-                status: 'pending'
-            },
-            transaction,
-            lock: transaction.LOCK.UPDATE
-        });
+        const request =
+            await this.updateRequestDAO.findPendingById(
+                requestId,
+                transaction
+            );
 
         if (!request) {
             throw new HttpError(
@@ -536,10 +544,11 @@ export class UpdateRequestService {
         gridModelId: number,
         transaction: Transaction
     ): Promise<GridModel> {
-        const model = await GridModel.findByPk(gridModelId, {
+        const model = await this.gridModelDAO.findById(
+            gridModelId,
             transaction,
-            lock: transaction.LOCK.UPDATE
-        });
+            true
+        );
 
         if (!model) {
             throw new HttpError(
@@ -567,10 +576,10 @@ export class UpdateRequestService {
         requestId: number,
         transaction: Transaction
     ): Promise<Update[]> {
-        const updates = await Update.findAll({
-            where: { updateRequestId: requestId },
+        const updates = await this.updateDAO.findByRequestId(
+            requestId,
             transaction
-        });
+        );
 
         if (updates.length === 0) {
             throw new HttpError(

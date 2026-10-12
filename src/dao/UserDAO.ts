@@ -1,3 +1,4 @@
+import { Transaction } from 'sequelize';
 import { User } from '../models/User.js';
 
 export class UserDAO {
@@ -11,8 +12,18 @@ export class UserDAO {
         return User.create(data);
     }
 
-    async findById(id: number): Promise<User | null> {
-        return User.findByPk(id);
+    async findById(
+        userId: number,
+        transaction?: Transaction
+    ): Promise<User | null> {
+        return User.findByPk(userId, { transaction });
+    }
+
+    async save(
+        user: User,
+        transaction?: Transaction
+    ): Promise<void> {
+        await user.save({ transaction });
     }
 
     async findByEmail(email: string): Promise<User | null> {
@@ -47,22 +58,22 @@ export class UserDAO {
     }
 
     async updateCredit(
-    email: string,
-    credit: number
-): Promise<User | null> {
-    const user = await User.findOne({
-        where: { email }
-    });
+        email: string,
+        credit: number
+    ): Promise<User | null> {
+        const user = await User.findOne({
+            where: { email }
+        });
 
-    if (!user) {
-        return null;
+        if (!user) {
+            return null;
+        }
+
+        const currentCredit = Number(user.credit);
+        user.credit = currentCredit + credit;
+
+        await user.save();
+
+        return user;
     }
-
-    const currentCredit = Number(user.credit);
-    user.credit = currentCredit + credit;
-
-    await user.save();
-
-    return user;
-}
 }

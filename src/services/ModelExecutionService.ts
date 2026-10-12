@@ -6,6 +6,8 @@ import { Execution } from '../models/Execution.js';
 import { CreditService } from './CreditService.js';
 import { HttpError } from '../middleware/errorHandler.js';
 import { sequelize } from '../shared/db.js';
+import { GridModelDAO } from '../dao/GridModelDAO.js';
+import { ExecutionDAO } from '../dao/ExecutionDAO.js';
 
 export interface Coordinates {
     row: number;
@@ -14,6 +16,8 @@ export interface Coordinates {
 
 export class ModelExecutionService {
     private creditService = new CreditService();
+    private gridModelDAO = new GridModelDAO();
+    private executionDAO = new ExecutionDAO();
 
     async executeModel(
         userId: number,
@@ -24,28 +28,23 @@ export class ModelExecutionService {
         const transaction = await sequelize.transaction();
 
         try {
-            const model = await GridModel.findOne({
-                where: {
-                    modelId,
-                    valid: true
-                },
+            const model = await this.gridModelDAO.findValidByModelId(
+                modelId,
                 transaction
-            });
+            );
 
-            if (!model) {
-                throw new HttpError(404, 'Model not found');
-            }
+            if (!model) { throw new HttpError(404, 'Model not found'); }
 
             this.validateCoordinates(start, model);
             this.validateCoordinates(goal, model);
 
-            if (
-                model.matrix[start.row][start.column] !== 0 ||
-                model.matrix[goal.row][goal.column] !== 0
-            ) {
+            if (model.matrix[start.row][start.column] !== 0) {
                 throw new HttpError(
-                    400,
-                    'Start and goal must be walkable cells'
+                    400,  'Start must be walkable cells' );
+            }
+
+            if ( model.matrix[goal.row][goal.column] !== 0 ) {
+                throw new HttpError( 400, 'Goal must be walkable cells'
                 );
             }
 
@@ -89,29 +88,21 @@ export class ModelExecutionService {
                 transaction
             );
 
-            const execution = await Execution.create({
-                gridModelId: model.id,
-                userId,
-                start,
-                goal,
-                path,
-                pathCost,
-                executionTime
-            }, { transaction });
+            const execution = await this.executionDAO.create(
+                {
+                    gridModelId: model.id,
+                    userId,
+                    start,
+                    goal,
+                    path,
+                    pathCost,
+                    executionTime
+                },
+                transaction);
 
             await transaction.commit();
 
-            return {
-                executionId: execution.id,
-                modelId: model.modelId,
-                start,
-                goal,
-                found: true,
-                path,
-                pathCost,
-                executionCost,
-                executionTimeMs: executionTime
-            };
+            return execution;
         } catch (error) {
             await transaction.rollback();
             throw error;
