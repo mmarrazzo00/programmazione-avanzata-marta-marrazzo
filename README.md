@@ -50,30 +50,40 @@ Le principali funzionalità sono:
 | Postman | Test delle API REST |
 | Newman | Esecuzione automatizzata della collection Postman |
 
-## 3. Architettura dell'applicazione
+## Architettura dell'applicazione
 
-L'applicazione adotta un'architettura a livelli, basata sulla separazione delle responsabilità tra gestione delle richieste HTTP, logica applicativa, regole di validazione e persistenza dei dati.
+L'applicazione adotta un'architettura a livelli, basata sulla separazione delle responsabilità tra gestione delle richieste HTTP, validazione dei dati, logica applicativa e persistenza.
 
 La struttura del progetto è organizzata nei seguenti componenti:
 
-- **Routes:** definiscono gli endpoint REST, associano i metodi HTTP alle operazioni applicative e gestiscono il collegamento con i controller e i middleware.
-- **Controllers:** ricevono le richieste HTTP, estraggono i parametri e i dati necessari, richiamano i servizi applicativi e restituiscono le risposte al client.
-- **Services:** implementano la logica di business del sistema, coordinando le operazioni relative ai modelli, al versionamento, agli aggiornamenti, ai crediti e all'esecuzione dell'algoritmo A*.
-- **ERules:** rappresentano le regole applicative e i controlli di validità utilizzati per verificare il rispetto dei vincoli previsti dal sistema.
-- **DAO (Data Access Objects):** incapsulano le operazioni di accesso e persistenza dei dati, separando la logica applicativa dalle interrogazioni al database.
-- **Models:** definiscono le entità persistenti e le relative associazioni mediante Sequelize.
-- **Middleware:** gestiscono funzionalità trasversali, tra cui autenticazione JWT, autorizzazione e controlli sulle richieste.
-- **Seed:** inizializza il database con utenti, modelli, versioni e richieste dimostrative, necessari anche per gli scenari di test.
+- **Routes:** definiscono gli endpoint REST, associano i metodi HTTP alle operazioni disponibili e configurano la sequenza dei middleware e dei controller.
+- **Middleware:** gestiscono funzionalità trasversali, tra cui la verifica dei token JWT, la validazione delle richieste e la gestione degli errori.
+- **Rules di validazione:** definiscono i controlli sui dati in ingresso, verificando la presenza dei campi obbligatori, i tipi dei valori e il rispetto dei vincoli strutturali previsti. Sono implementate mediante `express-validator` e vengono eseguite prima del controller e della logica applicativa.
+- **Controllers:** gestiscono le richieste HTTP, estraggono i parametri e i dati necessari, invocano i servizi applicativi e restituiscono le risposte al client.
+- **Services:** implementano la logica di business del sistema, coordinando le operazioni relative alla creazione e al versionamento dei modelli, agli aggiornamenti delle matrici, alla gestione dei crediti e all'esecuzione dell'algoritmo A*.
+- **DAO (Data Access Objects):** incapsulano le operazioni di accesso ai dati, separando, dove previsto, la logica applicativa dalle operazioni di persistenza.
+- **Models:** definiscono le entità persistenti, i relativi attributi e le associazioni tra le entità mediante Sequelize.
+- **Seed:** inizializza il database con dati predefiniti, quali utenti, modelli, versioni e richieste dimostrative, utili per verificare il funzionamento dell'applicazione e riprodurre gli scenari di test previsti.
+
+### Diagramma dell'architettura
+
+Il diagramma seguente illustra l'organizzazione dei componenti dell'applicazione.
+
+![Diagramma dell'architettura dell'applicazione](docs/architettura.png)
 
 ### Flusso generale di una richiesta
 
 Il flusso applicativo segue, in linea generale, questa sequenza:
 
-**Client HTTP → Routes → Middleware → Controllers → Services → ERules / DAO → Models → PostgreSQL**
+**Client HTTP → Routes → Middleware di autenticazione JWT → Rules di validazione → Middleware `validate` → Controller → Service → DAO / Models → PostgreSQL**
 
-Il controller gestisce la comunicazione HTTP, mentre il service coordina la logica applicativa. Le ERules consentono di applicare i vincoli previsti dal sistema; i DAO si occupano invece dell'interazione con i modelli persistenti e con il database.
+La sequenza effettiva può variare in funzione dell'endpoint e delle operazioni richieste. Non tutte le richieste utilizzano necessariamente le stesse regole di validazione o passano attraverso un DAO.
 
-Questa organizzazione favorisce la modularità, la manutenibilità, il riutilizzo del codice e la testabilità dei singoli componenti.
+Le routes definiscono il percorso della richiesta e l'ordine di esecuzione dei middleware. Il middleware di autenticazione verifica il token JWT, mentre le rules controllano la correttezza dei dati ricevuti. Il middleware `validate` raccoglie gli eventuali errori di validazione e impedisce alla richiesta di proseguire quando i dati non rispettano i vincoli previsti.
+
+Se i controlli vengono superati, il controller gestisce la comunicazione HTTP e invoca il service corrispondente. Il service coordina la logica applicativa e, quando necessario, utilizza i DAO e i models per accedere ai dati e persistenti nel database PostgreSQL.
+
+Questa organizzazione favorisce la modularità, la manutenibilità, il riutilizzo del codice e la testabilità dei singoli componenti, rendendo più chiara la separazione delle responsabilità tra i diversi livelli applicativi.
 
 ## 4. Autenticazione e autorizzazione
 
