@@ -1,14 +1,58 @@
 services:
+  # Database PostgreSQL
   db:
     image: postgres:16
+    restart: unless-stopped
+
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
+
     ports:
-      - "${DB_PORT}:5432"
+      - "${DB_PORT:-5432}:5432"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Backend Node.js + Express
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    restart: unless-stopped
+
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+
+      JWT_PRIVATE_KEY_PATH: /app/keys/private.key
+      JWT_PUBLIC_KEY_PATH: /app/keys/public.key
+
+    volumes:
+      - ./keys:/app/keys:ro
+
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
-  postgres_data:  
+  postgres_data:

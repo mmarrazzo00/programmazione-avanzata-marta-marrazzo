@@ -54,7 +54,8 @@ export class UpdateRequestAnalysisService {
                 'accepted',
                 'rejected',
                 'pending',
-                'auto'
+                'auto',
+                'split'
             ];
 
             if (!allowedStatuses.includes(STATUS)) {
@@ -91,7 +92,7 @@ export class UpdateRequestAnalysisService {
                         request.id,
                         undefined,
                         false,
-                        [
+                        [   'id',
                             'row',
                             'column',
                             'oldValue',
@@ -155,12 +156,14 @@ export class UpdateRequestAnalysisService {
         // Recupera le modifiche alle celle di ogni richiesta
         const result = await Promise.all(
             pendingRequests.map(async request => {
+
                 const updates =
                     await this.updateDAO.findByRequestId(
                         request.id,
                         undefined,
                         false,
                         [
+                            'id',
                             'row',
                             'column',
                             'oldValue',
@@ -168,6 +171,7 @@ export class UpdateRequestAnalysisService {
                             'createdAt'
                         ]
                     );
+
 
                 return {
                     ...request.toJSON(),

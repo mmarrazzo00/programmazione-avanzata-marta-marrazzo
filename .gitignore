@@ -1,4 +1,26 @@
+
+# Dipendenze
 node_modules/
+
+# File compilati
 dist/
+
+# Variabili d'ambiente
 .env
+.env.*
+
+# Chiavi RSA
 keys/
+
+# Test e report
+coverage/
+.nyc_output/
+newman/
+
+# Log
+*.log
+npm-debug.log*
+
+# File di sistema
+.DS_Store
+Thumbs.db

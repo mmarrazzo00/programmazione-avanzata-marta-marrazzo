@@ -5,11 +5,10 @@ import { HttpError } from '../middleware/errorHandler.js';
 import { Update } from '../models/Update.js';
 import { UpdateRequest } from '../models/UpdateRequest.js';
 import { sequelize } from '../shared/db.js';
-import { Transaction, WhereOptions } from 'sequelize';
+import { Transaction } from 'sequelize';
 import { GridModelDAO } from '../dao/GridModelDAO.js';
 import { UpdateDAO } from '../dao/UpdateDAO.js';
 import { UpdateRequestDAO } from '../dao/UpdateRequestDAO.js';
-import { Op } from 'sequelize';
 
 export interface CellUpdate {
     row: number;

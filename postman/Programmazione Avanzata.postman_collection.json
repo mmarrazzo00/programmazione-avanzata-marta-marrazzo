@@ -1,0 +1,2206 @@
+{
+  "info": {
+    "_postman_id": "30463e1d-57d8-4fd7-9901-c585cf040afb",
+    "name": "Programmazione Avanzata",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "58699334",
+    "_collection_link": "https://go.postman.co/collection/58699334-30463e1d-57d8-4fd7-9901-c585cf040afb?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Autenticazione JWT",
+      "item": [
+        {
+          "name": "Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Login admin riuscito\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"JWT restituito\", function () {\r",
+                  "    pm.expect(response.token).to.be.a(\"string\");\r",
+                  "    pm.expect(response.token.length).to.be.greaterThan(0);\r",
+                  "});\r",
+                  "\r",
+                  "if (response.token) {\r",
+                  "    pm.environment.set(\"adminToken\", response.token);\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"admin@example.com\",\r\n  \"password\": \"admin123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Login user riuscito\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"JWT restituito\", function () {\r",
+                  "    pm.expect(response.token).to.be.a(\"string\");\r",
+                  "    pm.expect(response.token.length).to.be.greaterThan(0);\r",
+                  "});\r",
+                  "\r",
+                  "if (response.token) {\r",
+                  "    pm.environment.set(\"userToken\", response.token);\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"email\": \"user@example.com\",\r\n  \"password\": \"user123\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "No credit User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Login user no credit riuscito\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"JWT restituito\", function () {\r",
+                  "    pm.expect(response.token).to.be.a(\"string\");\r",
+                  "    pm.expect(response.token.length).to.be.greaterThan(0);\r",
+                  "});\r",
+                  "\r",
+                  "if (response.token) {\r",
+                  "    pm.environment.set(\"noCreditToken\", response.token);\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"email\": \"nocredit@example.com\",\r\n  \"password\": \"nocredit123\"\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Creazione Modelli",
+      "item": [
+        {
+          "name": "Creazione modello valido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Modello creato correttamente\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Versione iniziale corretta\", function () {\r",
+                  "    pm.expect(response.version).to.eql(1);\r",
+                  "    pm.expect(response.valid).to.eql(true);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Dimensioni corrette\", function () {\r",
+                  "    pm.expect(response.rows).to.eql(5);\r",
+                  "    pm.expect(response.columns).to.eql(5);\r",
+                  "});\r",
+                  "\r",
+                  "if (pm.response.code === 201) {\r",
+                  "    pm.environment.set(\"createdModelId\", response.modelId);\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"modelId\": \"postman-grid-01\",\r\n  \"name\": \"Griglia creata da Postman\",\r\n  \"matrix\": [\r\n    [0, 0, 0, 0, 0],\r\n    [0, 1, 1, 1, 0],\r\n    [0, 0, 0, 1, 0],\r\n    [0, 1, 0, 0, 0],\r\n    [0, 0, 0, 0, 0]\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Valori non validi nella matrice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Matrice non valida rifiutata\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Errore di validazione presente\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.error).to.eql(\"Validation error\");\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"modelId\": \"postman-invalid-values\",\r\n  \"name\": \"Matrice con valori errati\",\r\n  \"matrix\": [\r\n    [0, 1, 0],\r\n    [1, 2, 0],\r\n    [0, 0, 1]\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Matrice non rettangolare",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Matrice irregolare rifiutata\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Messaggio di errore corretto\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.error).to.eql(\r",
+                  "        \"Matrix must be rectangular\"\r",
+                  "    );\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"modelId\": \"postman-irregular-grid\",\r\n  \"name\": \"Matrice non rettangolare\",\r\n  \"matrix\": [\r\n    [0, 1, 0],\r\n    [1, 0],\r\n    [0, 0, 1]\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Creazione senza credito",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Credito insufficiente\", function () {\r",
+                  "    pm.response.to.have.status(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Messaggio di errore corretto\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.error).to.eql(\r",
+                  "        \"Insufficient credit\"\r",
+                  "    );\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{noCreditToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"modelId\": \"postman-no-credit-grid\",\r\n  \"name\": \"Creazione senza credito\",\r\n  \"matrix\": [\r\n    [0, 0, 0],\r\n    [0, 1, 0],\r\n    [0, 0, 0]\r\n  ]\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Richieste di Aggiornamento",
+      "item": [
+        {
+          "name": "Aggiornamento diretto del proprietario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Aggiornamento diretto riuscito\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Stato auto corretto\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.status).to.eql(\"auto\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Costo corretto\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(Number(response.cost)).to.eql(0.35);\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n[\r\n  {\r\n    \"row\": 0,\r\n    \"column\": 0,\r\n    \"newValue\": 1\r\n  }\r\n]\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models/postman-grid-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models",
+                "postman-grid-01"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cella fuori dalla griglia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Coordinate fuori matrice rifiutate\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Messaggio di errore corretto\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.error).to.eql(\r",
+                  "        \"Cell position is outside the matrix\"\r",
+                  "    );\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n[\r\n  {\r\n    \"row\": 10,\r\n    \"column\": 10,\r\n    \"newValue\": 1\r\n  }\r\n]\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models/postman-grid-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models",
+                "postman-grid-01"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modifica valore invariato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Valore invariato rifiutato\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Messaggio corretto\", function () {\r",
+                  "    pm.expect(pm.response.json().error).to.eql(\r",
+                  "        \"New value must be different from current value\"\r",
+                  "    );\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n[\r\n  {\r\n    \"row\": 0,\r\n    \"column\": 3,\r\n    \"newValue\": 0\r\n  }\r\n]\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models/postman-grid-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models",
+                "postman-grid-01"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modifica duplicata",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Cella duplicata rifiutata\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Messaggio corretto\", function () {\r",
+                  "    pm.expect(pm.response.json().error).to.eql(\r",
+                  "        \"A cell cannot be updated more than once in the same request\"\r",
+                  "    );\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n[\r\n  {\r\n    \"row\": 1,\r\n    \"column\": 0,\r\n    \"newValue\": 1\r\n  },\r\n  {\r\n    \"row\": 1,\r\n    \"column\": 0,\r\n    \"newValue\": 1\r\n  }\r\n]\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models/postman-grid-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models",
+                "postman-grid-01"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Richiesta pending di un altro utente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Richiesta creata correttamente\", function () {\r",
+                  "    pm.response.to.have.status(201);\r",
+                  "});\r",
+                  "\r",
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Stato pending\", function () {\r",
+                  "    pm.expect(response.status).to.eql(\"pending\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Costo potenziale 0.70 token\", function () {\r",
+                  "    pm.expect(Number(response.cost)).to.eql(0.70);\r",
+                  "});\r",
+                  "\r",
+                  "if (response.id) {\r",
+                  "    pm.environment.set(\"requestId\", response.id);\r",
+                  "}\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{noCreditToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n[\r\n  {\r\n    \"row\": 0,\r\n    \"column\": 1,\r\n    \"newValue\": 1\r\n  },\r\n  {\r\n    \"row\": 0,\r\n    \"column\": 2,\r\n    \"newValue\": 1\r\n  }\r\n]\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models/postman-grid-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models",
+                "postman-grid-01"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Approvazione, rigetto e split",
+      "item": [
+        {
+          "name": "rigetto",
+          "item": [
+            {
+              "name": "Rigetto completo 1",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "\r",
+                      "pm.test(\"Richiesta pending creata\", function () {\r",
+                      "    pm.response.to.have.status(201);\r",
+                      "    pm.expect(pm.response.json().status).to.eql(\"pending\");\r",
+                      "});\r",
+                      "\r",
+                      "if (pm.response.code === 201) {\r",
+                      "    pm.environment.set(\r",
+                      "        \"rejectRequestId\",\r",
+                      "        pm.response.json().id\r",
+                      "    );\r",
+                      "}\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "\r\n[\r\n  {\r\n    \"row\": 1,\r\n    \"column\": 0,\r\n    \"newValue\": 1\r\n  }\r\n]\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/models/postman-grid-01",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "models",
+                    "postman-grid-01"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Rigetto completo 2",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "\r",
+                      "pm.test(\"Rigetto riuscito\", function () {\r",
+                      "    pm.response.to.have.status(200);\r",
+                      "    pm.expect(pm.response.json().status).to.eql(\"rejected\");\r",
+                      "});\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{userToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "\r\n{\r\n  \"accept\": false\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/update-requests/{{rejectRequestId}}/decision",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "update-requests",
+                    "{{rejectRequestId}}",
+                    "decision"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "split",
+          "item": [
+            {
+              "name": "Split decision 1",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "\r",
+                      "pm.test(\"Richiesta split creata\", function () {\r",
+                      "    pm.response.to.have.status(201);\r",
+                      "});\r",
+                      "\r",
+                      "if (pm.response.code === 201) {\r",
+                      "    pm.environment.set(\r",
+                      "        \"splitRequestId\",\r",
+                      "        pm.response.json().id\r",
+                      "    );\r",
+                      "}\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "\r\n[\r\n  {\r\n    \"row\": 0,\r\n    \"column\": 1,\r\n    \"newValue\": 1\r\n  },\r\n  {\r\n    \"row\": 0,\r\n    \"column\": 2,\r\n    \"newValue\": 1\r\n  }\r\n]\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/models/postman-grid-01",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "models",
+                    "postman-grid-01"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Split decision 2",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "\r",
+                      "pm.test(\"Richieste pending recuperate\", function () {\r",
+                      "    pm.response.to.have.status(200);\r",
+                      "});\r",
+                      "\r",
+                      "if (pm.response.code === 200) {\r",
+                      "    const requests = pm.response.json();\r",
+                      "\r",
+                      "    const request = requests.find(\r",
+                      "        r => Number(r.id) === Number(\r",
+                      "            pm.environment.get(\"splitRequestId\")\r",
+                      "        )\r",
+                      "    );\r",
+                      "\r",
+                      "    pm.test(\"Richiesta split trovata\", function () {\r",
+                      "        pm.expect(request).to.exist;\r",
+                      "        pm.expect(request.updates).to.have.lengthOf(2);\r",
+                      "    });\r",
+                      "\r",
+                      "    if (request && request.updates.length === 2) {\r",
+                      "        const first = request.updates.find(\r",
+                      "            u => u.row === 0 && u.column === 1\r",
+                      "        );\r",
+                      "        const second = request.updates.find(\r",
+                      "            u => u.row === 0 && u.column === 2\r",
+                      "        );\r",
+                      "\r",
+                      "        if (first && second) {\r",
+                      "            pm.environment.set(\"acceptedUpdateId\", first.id);\r",
+                      "            pm.environment.set(\"rejectedUpdateId\", second.id);\r",
+                      "        }\r",
+                      "    }\r",
+                      "}\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{userToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/analysis/pending-requests",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "analysis",
+                    "pending-requests"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Split decision 3",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "\r",
+                      "pm.test(\"Split Decision riuscita\", function () {\r",
+                      "    pm.response.to.have.status(200);\r",
+                      "});\r",
+                      "\r",
+                      "const response = pm.response.json();\r",
+                      "\r",
+                      "pm.test(\"Richiesta originale in stato split\", function () {\r",
+                      "    pm.expect(response.originalRequest.status).to.eql(\"split\");\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Due richieste figlie create\", function () {\r",
+                      "    pm.expect(response.childRequests).to.have.lengthOf(2);\r",
+                      "\r",
+                      "    const statuses = response.childRequests.map(r => r.status);\r",
+                      "    pm.expect(statuses).to.include(\"accepted\");\r",
+                      "    pm.expect(statuses).to.include(\"rejected\");\r",
+                      "});\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{userToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "\r\n{\r\n  \"decisions\": [\r\n    {\r\n      \"updateId\": {{acceptedUpdateId}},\r\n      \"decision\": \"accepted\"\r\n    },\r\n    {\r\n      \"updateId\": {{rejectedUpdateId}},\r\n      \"decision\": \"rejected\"\r\n    }\r\n  ]\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/update-requests/{{splitRequestId}}/cell-decisions",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "update-requests",
+                    "{{splitRequestId}}",
+                    "cell-decisions"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "approvazione",
+          "item": [
+            {
+              "name": "Approvazione 1",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "\r",
+                      "pm.test(\"Richiesta pending creata\", function () {\r",
+                      "    pm.response.to.have.status(201);\r",
+                      "});\r",
+                      "\r",
+                      "if (pm.response.code === 201) {\r",
+                      "    const response = pm.response.json();\r",
+                      "\r",
+                      "    pm.test(\"Stato pending corretto\", function () {\r",
+                      "        pm.expect(response.status).to.eql(\"pending\");\r",
+                      "    });\r",
+                      "\r",
+                      "    pm.environment.set(\"approveRequestId\", response.id);\r",
+                      "}\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "\r\n[\r\n  {\r\n    \"row\": 2,\r\n    \"column\": 0,\r\n    \"newValue\": 1\r\n  }\r\n]\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/models/postman-grid-01",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "models",
+                    "postman-grid-01"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Approvazione 2",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "\r",
+                      "pm.test(\"Approvazione riuscita\", function () {\r",
+                      "    pm.response.to.have.status(200);\r",
+                      "});\r",
+                      "\r",
+                      "pm.test(\"Richiesta accettata\", function () {\r",
+                      "    const response = pm.response.json();\r",
+                      "    pm.expect(response.status).to.eql(\"accepted\");\r",
+                      "});\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{userToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"accept\": true\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/update-requests/{{approveRequestId}}/decision",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "update-requests",
+                    "{{approveRequestId}}",
+                    "decision"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "approvazione non autorizzata",
+          "item": [
+            {
+              "name": "Approvazione 1",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "\r",
+                      "pm.test(\"Richiesta pending creata\", function () {\r",
+                      "    pm.response.to.have.status(201);\r",
+                      "});\r",
+                      "\r",
+                      "if (pm.response.code === 201) {\r",
+                      "    const response = pm.response.json();\r",
+                      "\r",
+                      "    pm.test(\"Stato pending corretto\", function () {\r",
+                      "        pm.expect(response.status).to.eql(\"pending\");\r",
+                      "    });\r",
+                      "\r",
+                      "    pm.environment.set(\"approveRequestId\", response.id);\r",
+                      "}\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "\r\n[\r\n  {\r\n    \"row\": 2,\r\n    \"column\": 0,\r\n    \"newValue\": 0\r\n  }\r\n]\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/models/postman-grid-01",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "models",
+                    "postman-grid-01"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Approvazione 2",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "\r",
+                      "pm.test(\"Approvazione non autorizzata\", function () {\r",
+                      "    pm.response.to.have.status(403);\r",
+                      "});\r",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {},
+                    "requests": {}
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"accept\": true\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/update-requests/{{approveRequestId}}/decision",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "update-requests",
+                    "{{approveRequestId}}",
+                    "decision"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Storico e filtri",
+      "item": [
+        {
+          "name": "storico completo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Storico recuperato correttamente\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"La risposta è un array\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Sono presenti aggiornamenti\", function () {\r",
+                  "    pm.expect(pm.response.json().length).to.be.greaterThan(0);\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analysis/postman-grid-01/updates",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analysis",
+                "postman-grid-01",
+                "updates"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "modello pending",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Stato modello recuperato\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Campi stato presenti\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(response.modelId).to.eql(\"postman-grid-01\");\r",
+                  "    pm.expect(response.hasPendingRequests).to.be.a(\"boolean\");\r",
+                  "    pm.expect(response.pendingCount).to.be.a(\"number\");\r",
+                  "    pm.expect(response.pendingRequests).to.be.an(\"array\");\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analysis/postman-grid-01/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analysis",
+                "postman-grid-01",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "modello pending Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Elenco pending recuperato\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Tutte le richieste sono pending\", function () {\r",
+                  "    const requests = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(requests).to.be.an(\"array\");\r",
+                  "\r",
+                  "    requests.forEach(request => {\r",
+                  "        pm.expect(request.status).to.eql(\"pending\");\r",
+                  "        pm.expect(request.updates).to.be.an(\"array\");\r",
+                  "    });\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analysis/pending-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analysis",
+                "pending-requests"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "richieste accettate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Filtro accepted funzionante\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "\r",
+                  "    const requests = pm.response.json();\r",
+                  "\r",
+                  "    pm.expect(requests).to.be.an(\"array\");\r",
+                  "    pm.expect(requests.length).to.be.greaterThan(0);\r",
+                  "\r",
+                  "    requests.forEach(request => {\r",
+                  "        pm.expect(request.status).to.eql(\"accepted\");\r",
+                  "    });\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analysis/postman-grid-01/updates?STATUS=accepted",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analysis",
+                "postman-grid-01",
+                "updates"
+              ],
+              "query": [
+                {
+                  "key": "STATUS",
+                  "value": "accepted"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "richieste pending",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Storico recuperato correttamente\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"La risposta è un array\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Sono presenti aggiornamenti\", function () {\r",
+                  "    pm.expect(pm.response.json().length).to.be.greaterThan(0);\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analysis/postman-grid-01/updates?STATUS=pending",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analysis",
+                "postman-grid-01",
+                "updates"
+              ],
+              "query": [
+                {
+                  "key": "STATUS",
+                  "value": "pending"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "filtro stato e data aggiornamento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Filtro combinato funzionante\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "\r",
+                  "    const requests = pm.response.json();\r",
+                  "\r",
+                  "    const from = new Date(\"2026-10-01T00:00:00Z\");\r",
+                  "    const to = new Date(\"2026-10-31T23:59:59Z\");\r",
+                  "\r",
+                  "    requests.forEach(request => {\r",
+                  "        pm.expect(request.status).to.eql(\"rejected\");\r",
+                  "\r",
+                  "        const date = new Date(request.updatedAt);\r",
+                  "\r",
+                  "        pm.expect(date.getTime())\r",
+                  "            .to.be.within(from.getTime(), to.getTime());\r",
+                  "    });\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analysis/postman-grid-01/updates?FROM=2026-10-01&TO=2026-10-31T23:59:59Z&STATUS=rejected&DATE_TYPE=updatedAt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analysis",
+                "postman-grid-01",
+                "updates"
+              ],
+              "query": [
+                {
+                  "key": "FROM",
+                  "value": "2026-10-01"
+                },
+                {
+                  "key": "TO",
+                  "value": "2026-10-31T23:59:59Z"
+                },
+                {
+                  "key": "STATUS",
+                  "value": "rejected"
+                },
+                {
+                  "key": "DATE_TYPE",
+                  "value": "updatedAt"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "stato non valido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Stato non valido rifiutato\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Messaggio errore corretto\", function () {\r",
+                  "    pm.expect(pm.response.json().error).to.eql(\"Validation error\");\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analysis/postman-grid-01/updates?STATUS=unknown",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analysis",
+                "postman-grid-01",
+                "updates"
+              ],
+              "query": [
+                {
+                  "key": "STATUS",
+                  "value": "unknown"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "filtro stato e data aggiornamento Copy",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Intervallo date invertito rifiutato\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Messaggio errore corretto\", function () {\r",
+                  "    pm.expect(pm.response.json().error)\r",
+                  "        .to.eql(\"FROM date must be before or equal to TO date\");\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/analysis/postman-grid-01/updates?FROM=2026-10-20&TO=2026-10-01",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analysis",
+                "postman-grid-01",
+                "updates"
+              ],
+              "query": [
+                {
+                  "key": "FROM",
+                  "value": "2026-10-20"
+                },
+                {
+                  "key": "TO",
+                  "value": "2026-10-01"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Esecuzione A*",
+      "item": [
+        {
+          "name": "esecuzione riuscita",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Esecuzione A* riuscita\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "const result = pm.response.json();\r",
+                  "\r",
+                  "pm.test(\"Percorso ottimo corretto\", function () {\r",
+                  "    pm.expect(result.path).to.deep.equal([\r",
+                  "        { row: 0, column: 0 },\r",
+                  "        { row: 0, column: 1 },\r",
+                  "        { row: 0, column: 2 },\r",
+                  "        { row: 1, column: 2 },\r",
+                  "        { row: 2, column: 2 }\r",
+                  "    ]);\r",
+                  "\r",
+                  "    pm.expect(Number(result.pathCost)).to.eql(4);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Tempo di esecuzione valido\", function () {\r",
+                  "    pm.expect(result.executionTime).to.be.a(\"number\");\r",
+                  "    pm.expect(result.executionTime).to.be.at.least(0);\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"start\": {\r\n    \"row\": 0,\r\n    \"column\": 0\r\n  },\r\n  \"goal\": {\r\n    \"row\": 2,\r\n    \"column\": 2\r\n  }\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models/astar-demo/execute",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models",
+                "astar-demo",
+                "execute"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "percorso non valido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Partenza su ostacolo rifiutata\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Errore restituito\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.error).to.be.a(\"string\");\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"start\": {\r\n    \"row\": 1,\r\n    \"column\": 0\r\n  },\r\n  \"goal\": {\r\n    \"row\": 2,\r\n    \"column\": 2\r\n  }\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models/astar-demo/execute",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models",
+                "astar-demo",
+                "execute"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "percorso non disponibile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"No path found\", function () {\r",
+                  "    pm.response.to.have.status(404);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Errore restituito\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response.error).to.be.a(\"string\");\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"start\": {\r\n    \"row\": 0,\r\n    \"column\": 0\r\n  },\r\n  \"goal\": {\r\n    \"row\": 2,\r\n    \"column\": 2\r\n  }\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models/astar-blocked/execute",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models",
+                "astar-blocked",
+                "execute"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "coordinate fuori matrice",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Coordinate fuori matrice rifiutate\", function () {\r",
+                  "    pm.response.to.have.status(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Errore restituito\", function () {\r",
+                  "    pm.expect(pm.response.json().error).to.be.a(\"string\");\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"start\": {\r\n    \"row\": 0,\r\n    \"column\": 0\r\n  },\r\n  \"goal\": {\r\n    \"row\": 5,\r\n    \"column\": 5\r\n  }\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/models/astar-demo/execute",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "models",
+                "astar-demo",
+                "execute"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Gestione credito Admin",
+      "item": [
+        {
+          "name": "ricarica vietata",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Ricarica vietata all'utente normale\", function () {\r",
+                  "    pm.response.to.have.status(403);\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"email\": \"nocredit@example.com\",\r\n  \"credit\": 10\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/credit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "credit"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ricarica autorizzata",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "\r",
+                  "pm.test(\"Ricarica effettuata correttamente\", function () {\r",
+                  "    pm.response.to.have.status(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Risposta JSON valida\", function () {\r",
+                  "    const response = pm.response.json();\r",
+                  "    pm.expect(response).to.be.an(\"object\");\r",
+                  "});\r",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n  \"email\": \"user@example.com\",\r\n  \"credit\": 10\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/credit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "credit"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Casi di errore",
+      "item": []
+    }
+  ]
+}

@@ -5,9 +5,9 @@ export class Execution extends Model {
     declare id: number;
     declare gridModelId: number;
     declare userId: number;
-    declare start: object;
-    declare goal: object;
-    declare path: object;
+    declare start: { row: number; column: number };
+    declare goal: { row: number; column: number };
+    declare path: { row: number; column: number }[];
     declare pathCost: number;
     declare executionTime: number;
 }
