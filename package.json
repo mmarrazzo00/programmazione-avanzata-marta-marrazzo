@@ -1,8 +1,8 @@
 {
   "name": "programmazione-avanzata-marta-marrazzo",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Backend REST per modelli a griglia versionati, richieste di aggiornamento, gestione dei crediti e ricerca A*.",
+  "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
@@ -14,7 +14,7 @@
     "demo:reset": "node scripts/demo-reset.cjs"
   },
   "keywords": [],
-  "author": "",
+  "author": "Marta Marrazzo",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
