@@ -695,7 +695,7 @@ I percorsi utilizzati dal backend nel container sono:
 /app/keys/public.key
 ```
 
-Le chiavi RSA non devono essere caricate nel repository GitHub.
+**Nota per la consegna:** il file `.env` e le chiavi RSA necessarie all'esecuzione del progetto sono forniti separatamente al docente.  Per avviare l'applicazione, è sufficiente copiare il file .env e la cartella keys/ nella directory principale del repository clonato.
 
 ### Avvio dei container
 Eseguire:
@@ -846,6 +846,8 @@ npm run demo:reset -- --confirm
 
 Lo script di reset svuota le tabelle applicative del database Docker di prova e successivamente esegue il seed.
 
+Il comando `npm run demo:reset -- --confirm` deve essere eseguito dal terminale del sistema ospitante, nella directory principale del progetto, con Docker Compose già avviato. Lo script utilizza Docker Compose per svuotare le tabelle PostgreSQL e avviare nuovamente il seed nel container applicativo. È necessario aver installato le dipendenze locali con `npm ci`.
+
 La procedura consigliata è:
 
 ```bash
@@ -853,8 +855,6 @@ docker compose up --build -d
 npm run demo:reset -- --confirm
 npm run test:postman
 ```
-
-Il reset è un'operazione distruttiva e deve essere utilizzato esclusivamente sul database dimostrativo, senza dati da conservare.
 
 In alternativa, è possibile svuotare manualmente le tabelle PostgreSQL e rieseguire il seed.
 
