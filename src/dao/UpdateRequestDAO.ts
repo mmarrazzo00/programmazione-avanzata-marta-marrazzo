@@ -24,6 +24,7 @@ export class UpdateRequestDAO {
         return UpdateRequest.create(data, { transaction });
     }
 
+
     async findById(
         id: number,
         transaction?: Transaction,
@@ -57,6 +58,7 @@ export class UpdateRequestDAO {
     ): Promise<void> {
         await request.save({ transaction });
     }
+
 
     async findByVersionIds(
         versionIds: number[],

@@ -102,7 +102,7 @@ export class UpdateRequestService {
                 request.status = 'rejected';
                 request.decidedAt = new Date();
 
-                await request.save({ transaction });
+                await this.updateRequestDAO.save(request, transaction);
                 await transaction.commit();
 
                 return request;
@@ -151,8 +151,7 @@ export class UpdateRequestService {
             request.status = 'accepted';
             request.decidedAt = new Date();
 
-            await request.save({ transaction });
-
+            await this.updateRequestDAO.save(request, transaction);
             await transaction.commit();
             return request;
         } catch (error) {
@@ -338,18 +337,18 @@ export class UpdateRequestService {
                     transaction
                 );
 
-                for (const update of group.updates) {
-                    await Update.create(
-                        {
-                            updateRequestId: child.id,
-                            row: update.row,
-                            column: update.column,
-                            oldValue: update.oldValue,
-                            newValue: update.newValue
-                        },
-                        { transaction }
-                    );
-                }
+
+                await this.updateDAO.createMany(
+                    group.updates.map(update => ({
+                        updateRequestId: child.id,
+                        row: update.row,
+                        column: update.column,
+                        oldValue: update.oldValue,
+                        newValue: update.newValue
+                    })),
+                    transaction
+                );
+
 
                 childRequests.push(child);
             }
