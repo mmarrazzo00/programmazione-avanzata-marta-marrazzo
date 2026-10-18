@@ -31,26 +31,19 @@
 
 ## 1. Descrizione del progetto
 
-Pathfinding API è un'applicazione backend REST sviluppata in TypeScript per la gestione di modelli a griglia bidimensionale, il loro versionamento e l'esecuzione dell'algoritmo di ricerca del percorso A* (A-star).
+## Obiettivo del progetto
 
-Il sistema consente agli utenti autenticati di creare modelli, modificarne le celle, proporre aggiornamenti a modelli appartenenti ad altri utenti e gestire le relative richieste di approvazione.
+**Pathfinding API** è un'applicazione backend REST sviluppata in TypeScript, utilizzando Node.js, Express, Sequelize e PostgreSQL, nell'ambito del corso di Programmazione Avanzata A.A. 2025/2026.
 
-L'applicazione comprende inoltre un sistema di crediti, funzionalità di analisi storica, controlli di autorizzazione e strumenti per l'esecuzione di test automatici.
+L'obiettivo del progetto è realizzare un sistema per la **creazione, gestione e valutazione di modelli di ricerca del percorso su griglie bidimensionali**, attraverso l'utilizzo dell'algoritmo A* (A-star).
 
-Le principali funzionalità sono:
+Il sistema si ispira al concetto di **crowdsourcing**, consentendo a più utenti autenticati di contribuire all'aggiornamento dei modelli condivisi. Ogni utente può creare e gestire i propri modelli oppure proporre modifiche a quelli di altri utenti, che potranno essere approvate o rifiutate dai rispettivi proprietari.
 
-- Autenticazione tramite JWT con firma RS256.
-- Gestione di utenti normali e amministratori.
-- Creazione e validazione di modelli a griglia.
-- Versionamento dei modelli.
-- Aggiornamento diretto da parte del proprietario.
-- Richieste di aggiornamento da parte di altri utenti.
-- Approvazione, rigetto e accettazione parziale delle modifiche.
-- Gestione dei crediti associati agli aggiornamenti.
-- Consultazione dello storico con filtri temporali e per stato.
-- Esecuzione dell'algoritmo A*.
-- Persistenza dei dati su PostgreSQL.
-- Test automatici con Jest e Postman/Newman.
+L'applicazione prevede inoltre un meccanismo di versionamento, per conservare lo storico delle modifiche, e un sistema di crediti per regolare le operazioni effettuate dagli utenti.
+
+L'interazione con il sistema avviene attraverso API REST protette da autenticazione JWT, mentre la persistenza delle informazioni è affidata a un database relazionale.
+
+Il progetto è stato sviluppato prestando particolare attenzione alla **validazione delle richieste, alla gestione degli errori, all'organizzazione del codice mediante design pattern e alla verifica delle funzionalità attraverso test automatici**.
 
 ---
 
@@ -102,8 +95,6 @@ Il flusso applicativo segue, in linea generale, questa sequenza:
 
 **Client HTTP → Routes → Middleware di autenticazione JWT → Rules di validazione → Middleware `validate` → Controller → Service → DAO / Models → PostgreSQL**
 
-La sequenza effettiva può variare in funzione dell'endpoint e delle operazioni richieste. Non tutte le richieste utilizzano necessariamente le stesse regole di validazione o passano attraverso un DAO.
-
 Le routes definiscono il percorso della richiesta e l'ordine di esecuzione dei middleware. Il middleware di autenticazione verifica il token JWT, mentre le rules controllano la correttezza dei dati ricevuti. Il middleware `validate` raccoglie gli eventuali errori di validazione e impedisce alla richiesta di proseguire quando i dati non rispettano i vincoli previsti.
 
 Se i controlli vengono superati, il controller gestisce la comunicazione HTTP e invoca il service corrispondente. Il service coordina la logica applicativa e, quando necessario, utilizza i DAO e i models per accedere ai dati persistenti nel database PostgreSQL.
@@ -116,9 +107,9 @@ Questa organizzazione favorisce la modularità, la manutenibilità, il riutilizz
 
 ![Diagramma ER del database](docs/db.png)
 
-Il diagramma Entity-Relationship rappresenta la struttura del database relazionale PostgreSQL utilizzato dall'applicazione **Pathfinding API**.
+Il diagramma Entity-Relationship rappresenta la struttura del database relazionale PostgreSQL utilizzato dal sistema.
 
-La progettazione dei dati si basa su cinque entità principali, definite attraverso l'ORM Sequelize, collegate mediante chiavi primarie (PK) e chiavi esterne (FK).
+La progettazione dei dati si basa su cinque entità, definite attraverso l'ORM Sequelize, collegate mediante chiavi primarie (PK) e chiavi esterne (FK).
 
 **Entità principali**
 
@@ -300,14 +291,35 @@ Il proprietario può modificare direttamente il proprio modello oppure gestire l
 
 Il diagramma utilizza la relazione `«extend»` per rappresentare l'addebito condizionale associato alla richiesta di modifica: quando il richiedente è anche proprietario del modello, la modifica viene applicata direttamente con addebito immediato. Negli altri casi, la richiesta rimane in attesa della decisione del proprietario.
 
-### Analisi dei dati
-Il sistema mette a disposizione funzionalità di consultazione per:
+### Analisi dei dati e monitoraggio delle richieste
 
-- Verificare lo stato di un modello.
-- Consultare lo storico degli aggiornamenti.
-- Visualizzare le richieste di modifica pendenti.
+Il sistema mette a disposizione funzionalità di consultazione e analisi che consentono agli utenti di monitorare lo stato dei modelli, visualizzare le richieste di aggiornamento e ricostruire lo storico delle modifiche effettuate nel tempo.
 
-Queste operazioni consentono di monitorare lo stato delle richieste e ricostruire l'evoluzione dei modelli nel tempo.
+In particolare, sono previste tre funzionalità principali:
+
+**Consultazione dello storico degli aggiornamenti**
+
+È possibile visualizzare tutte le richieste di modifica associate a un determinato modello, considerando anche le diverse versioni generate nel tempo.
+
+La consultazione può essere personalizzata attraverso filtri temporali, specificando una data iniziale, una data finale oppure un intervallo completo. È inoltre possibile filtrare le richieste in base al loro stato, distinguendo tra modifiche accettate, rifiutate, ancora pendenti, applicate direttamente dal proprietario o gestite mediante approvazione parziale.
+
+Per ogni richiesta vengono riportate anche le modifiche proposte alle singole celle, con i relativi valori originali e aggiornati.
+
+**Verifica dello stato di un modello**
+
+Il sistema permette di verificare se un modello presenta richieste di modifica ancora in attesa di approvazione.
+
+La verifica considera tutte le versioni del modello e fornisce un riepilogo della presenza e del numero di richieste pendenti, accompagnato dalle informazioni essenziali delle richieste individuate.
+
+**Consultazione delle richieste pendenti dei propri modelli**
+
+Ogni utente autenticato può visualizzare le richieste di aggiornamento ancora da valutare relative ai modelli di cui è proprietario.
+
+Per ciascuna richiesta vengono mostrate le modifiche proposte alle celle, permettendo al proprietario di individuare gli aggiornamenti sui quali deve esprimere una decisione.
+
+Questa funzionalità agevola la gestione delle richieste ricevute e le successive operazioni di approvazione, rifiuto o approvazione parziale.
+
+Nel complesso, le funzionalità di analisi garantiscono la **tracciabilità delle modifiche e il monitoraggio delle richieste**, consentendo di ricostruire l'evoluzione dei modelli e di distinguere gli aggiornamenti già valutati da quelli ancora in attesa di decisione.
 
 ### Funzionalità amministrative
 L'amministratore può effettuare la **ricarica del credito** degli utenti, necessaria per consentire l'esecuzione delle operazioni soggette a pagamento.
@@ -319,10 +331,10 @@ Nel diagramma sono utilizzate le principali relazioni UML:
 
 - **Associazione:** collega gli attori alle funzionalità con cui interagiscono.
 - **`«include»`:** rappresenta comportamenti richiamati nell'esecuzione di un caso d'uso principale, come l'utilizzo dell'algoritmo A* e la gestione degli addebiti.
-- **`«extend»`:** rappresenta un comportamento aggiuntivo eseguito al verificarsi di una specifica condizione, come l'addebito immediato per una modifica richiesta dal proprietario.
+- **`«extend»`:** rappresenta un comportamento aggiuntivo eseguito al verificarsi di una specifica condizione, come l'addebito del credito di un utente per una modifica approvata dal proprietario.
 - **Generalizzazione:** rappresenta la specializzazione dell'attore **Proprietario del modello** rispetto all'attore **User**.
 
-Nel complesso, il diagramma evidenzia la separazione delle responsabilità tra utenti, proprietari e amministratori, oltre all'integrazione tra autenticazione JWT, gestione dei modelli, algoritmo A*, sistema dei crediti e approvazione delle modifiche.
+Il diagramma evidenzia la separazione delle responsabilità tra utenti, proprietari e amministratori, oltre all'integrazione tra autenticazione JWT, gestione dei modelli, algoritmo A*, sistema dei crediti e approvazione delle modifiche.
 
 ---
 
@@ -431,7 +443,6 @@ Per conservare lo storico delle decisioni, vengono create due richieste figlie c
 
 La richiesta originale assume infine lo stato `split`.
 
-s
 
 Tutte le operazioni di addebito, aggiornamento del modello e persistenza vengono eseguite all'interno di un'unica transazione Sequelize, garantendo la consistenza dei dati anche in caso di errore.
 
@@ -569,11 +580,12 @@ La loro applicazione contribuisce a rendere la Pathfinding API più modulare, ma
 
 Con la configurazione Docker predefinita, le API sono accessibili all'indirizzo:
 
-`http://localhost:3000`
+[http://localhost:3000](http://localhost:3000)
 
 | Metodo | Endpoint | Descrizione |
 |---|---|---|
 | GET | `/health` | Verifica dello stato del backend |
+| POST | `/users` | Registrazione di un nuovo utente |
 | POST | `/login` | Autenticazione dell'utente |
 | POST | `/models` | Creazione di un nuovo modello |
 | POST | `/models/:modelId` | Aggiornamento o proposta di modifica |
@@ -589,64 +601,7 @@ Gli endpoint protetti richiedono il token JWT nell'header HTTP:
 
 `Authorization: Bearer <token>`
 
-### Esempio di creazione di un modello
-
-**POST `/models`**
-
-```json
-{
-  "modelId": "example-grid",
-  "name": "Example Grid",
-  "matrix": [
-    [0, 0, 0],
-    [0, 1, 0],
-    [0, 0, 0]
-  ]
-}
-```
-
-### Esempio di proposta di aggiornamento
-
-**POST `/models/example-grid`**
-
-```json
-[
-  {
-    "row": 0,
-    "column": 1,
-    "newValue": 1
-  }
-]
-```
-
-### Esempio di approvazione completa
-
-**PATCH `/update-requests/:requestId/decision`**
-
-```json
-{
-  "accept": true
-}
-```
-
-### Esempio di esecuzione A*
-
-**POST `/models/astar-demo/execute`**
-
-```json
-{
-  "start": {
-    "row": 0,
-    "column": 0
-  },
-  "goal": {
-    "row": 2,
-    "column": 2
-  }
-}
-```
-
----
+La registrazione tramite `POST /users` e l'autenticazione tramite `POST /login` non richiedono un token JWT.
 
 ## 14. Installazione e avvio con Docker
 
@@ -793,7 +748,6 @@ Il seed predispone dati utili alla verifica delle principali funzionalità appli
 | `user@example.com` | `user123` | 100 |
 | `nocredit@example.com` | `nocredit123` | 0 |
 
-Le credenziali sono destinate esclusivamente all'ambiente dimostrativo e non devono essere utilizzate in produzione.
 
 ### Modelli disponibili
 | Identificativo | Descrizione |
