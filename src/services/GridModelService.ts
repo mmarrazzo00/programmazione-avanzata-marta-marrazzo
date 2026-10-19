@@ -1,14 +1,35 @@
-
 import { GridModel } from '../models/GridModel.js';
 import { CreditService } from './CreditService.js';
 import { GridModelDAO } from '../dao/GridModelDAO.js';
 import { HttpError } from '../middleware/errorHandler.js';
 
+/**
+ * Service responsabile della creazione dei modelli a griglia.
+ *
+ * Verifica la struttura e i valori della matrice, calcola
+ * il costo di creazione in base al numero di celle
+ * e delega il consumo dei crediti e la persistenza
+ * ai rispettivi componenti.
+ */
 export class GridModelService {
 
     private creditService = new CreditService();
     private gridModelDAO = new GridModelDAO();
 
+    /**
+     * Crea un nuovo modello a griglia associato all'utente.
+     *
+     * Ogni matrice deve essere rettangolare, non vuota
+     * e contenere esclusivamente valori 0 e 1.
+     * Il modello viene creato con versione iniziale 1.
+     *
+     * @param userId - Identificativo dell'utente proprietario.
+     * @param modelId - Identificativo logico del modello.
+     * @param name - Nome del modello.
+     * @param matrix - Matrice bidimensionale della griglia.
+     * @returns Il modello creato e salvato nel database.
+     * @throws HttpError 400 se la matrice non è valida.
+     */
     async createModel(
         userId: number,
         modelId: string,

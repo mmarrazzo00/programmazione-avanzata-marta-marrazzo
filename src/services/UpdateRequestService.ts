@@ -1,4 +1,3 @@
-
 import { GridModel } from '../models/GridModel.js';
 import { CreditService } from './CreditService.js';
 import { HttpError } from '../middleware/errorHandler.js';
@@ -10,12 +9,14 @@ import { GridModelDAO } from '../dao/GridModelDAO.js';
 import { UpdateDAO } from '../dao/UpdateDAO.js';
 import { UpdateRequestDAO } from '../dao/UpdateRequestDAO.js';
 
+/** Coordinate e nuovo valore di una cella da modificare. */
 export interface CellUpdate {
     row: number;
     column: number;
     newValue: number;
 }
 
+/** Modifica validata, arricchita con il valore originale della cella. */
 interface PreparedCellUpdate {
     row: number;
     column: number;
@@ -23,11 +24,18 @@ interface PreparedCellUpdate {
     newValue: number;
 }
 
+/** Decisione del proprietario su una singola modifica identificata da updateId. */
 export interface CellDecision {
     updateId: number;
     decision: 'accepted' | 'rejected';
 }
 
+/**
+ * Coordina proposte di modifica, approvazioni e rifiuti.
+ * Gestisce anche aggiornamenti automatici del proprietario,
+ * versionamento delle griglie, addebiti e decisioni parziali.
+ * Le operazioni di persistenza sono delegate ai DAO.
+ */
 export class UpdateRequestService {
 
     private creditService = new CreditService();
@@ -35,17 +43,24 @@ export class UpdateRequestService {
     private updateDAO = new UpdateDAO();
     private updateRequestDAO = new UpdateRequestDAO();
 
+    /**
+     * Crea una richiesta di aggiornamento sulla versione valida del modello.
+     * Le modifiche del proprietario sono applicate immediatamente (stato auto),
+     * mentre quelle degli altri utenti rimangono pending, senza addebito immediato.
+     */
     async createUpdateRequest(
         userId: number,
         modelId: string,
         updates: CellUpdate[]
     ): Promise<UpdateRequest> {
+        // Usa la versione attiva e prepara modifiche con i rispettivi valori originali.
         const model = await this.findValidModel(modelId);
         const cellUpdates = this.validateAndPrepareUpdates(model, updates);
         const cost = this.calculateUpdateCost(cellUpdates.length);
         const transaction = await sequelize.transaction();
 
         try {
+            // La proprietà del modello determina il flusso automatico o pending.
             const isOwner = model.ownerId === userId;
 
             const request = await this.createUpdateRequestRecord(
@@ -57,6 +72,7 @@ export class UpdateRequestService {
                 transaction
             );
 
+            // Il proprietario paga e genera subito una nuova versione della griglia.
             if (isOwner) {
                 await this.creditService.checkAndConsume(
                     userId,
@@ -78,6 +94,11 @@ export class UpdateRequestService {
         }
     }
 
+    /**
+     * Accetta o rifiuta integralmente una richiesta pending.
+     * Solo il proprietario può decidere; l'accettazione richiede una versione
+     * ancora valida, celle inalterate e credito sufficiente del proponente.
+     */
     async decideUpdateRequest(
         requestId: number,
         ownerId: number,
@@ -98,6 +119,7 @@ export class UpdateRequestService {
 
             this.checkModelOwner(model, ownerId);
 
+            // Il rifiuto aggiorna soltanto stato e data, senza addebito.
             if (!accept) {
                 request.status = 'rejected';
                 request.decidedAt = new Date();
@@ -108,6 +130,7 @@ export class UpdateRequestService {
                 return request;
             }
 
+            // Non è possibile applicare modifiche a una versione superata.
             if (!model.valid) {
                 throw new HttpError(
                     409,
@@ -136,6 +159,7 @@ export class UpdateRequestService {
                 }
             }
 
+            // Il costo grava sull'utente che ha proposto la modifica.
             await this.creditService.checkAndConsume(
                 request.userId,
                 Number(request.cost),
@@ -160,6 +184,11 @@ export class UpdateRequestService {
         }
     }
 
+    /**
+     * Gestisce decisioni miste su singole celle.
+     * Verifica che ogni modifica abbia una sola decisione, applica e addebita
+     * esclusivamente quelle accettate e crea richieste figlie per lo storico.
+     */
     async splitUpdateRequest(
         requestId: number,
         ownerId: number,
@@ -172,6 +201,7 @@ export class UpdateRequestService {
             throw new HttpError(400, 'At least one cell decision is required');
         }
 
+        // Individua identificativi o decisioni non validi e ID duplicati.
         const updateIds = decisions.map(d => d.updateId);
 
         if (
@@ -214,6 +244,7 @@ export class UpdateRequestService {
                 throw new HttpError(400, 'No cell updates found for this request');
             }
 
+            // La mappa consente di verificare rapidamente gli ID delle modifiche.
             const updatesById = new Map(
                 updates.map(update => [update.id, update])
             );
@@ -240,6 +271,7 @@ export class UpdateRequestService {
                 decisions.map(d => [d.updateId, d.decision])
             );
 
+            // Suddivide le modifiche nei due gruppi da registrare separatamente.
             const acceptedUpdates: Update[] = [];
             const rejectedUpdates: Update[] = [];
 
@@ -302,6 +334,7 @@ export class UpdateRequestService {
             const childRequests: UpdateRequest[] = [];
             const now = new Date();
 
+            // Ogni gruppo non vuoto diventerà una richiesta figlia.
             const groups: {
                 updates: Update[];
                 status: 'accepted' | 'rejected';
@@ -325,6 +358,7 @@ export class UpdateRequestService {
                     group.updates.length
                 );
 
+                // Le richieste figlie mantengono il riferimento alla versione originale.
                 const child = await this.updateRequestDAO.create(
                     {
                         userId: request.userId,
@@ -370,6 +404,7 @@ export class UpdateRequestService {
         }
     }
 
+    /** Recupera la versione valida del modello oppure segnala HTTP 404. */
     private async findValidModel(
         modelId: string
     ): Promise<GridModel> {
@@ -383,6 +418,10 @@ export class UpdateRequestService {
         return model;
     }
 
+    /**
+     * Valida coordinate, valori e assenza di duplicati.
+     * Memorizza anche il valore precedente per verifiche successive di coerenza.
+     */
     private validateAndPrepareUpdates(
         model: GridModel,
         updates: CellUpdate[]
@@ -395,6 +434,7 @@ export class UpdateRequestService {
         }
 
         const cellUpdates: PreparedCellUpdate[] = [];
+        // Le coordinate serializzate permettono di rilevare celle duplicate.
         const seenCells = new Set<string>();
 
         for (const update of updates) {
@@ -451,10 +491,15 @@ export class UpdateRequestService {
         return cellUpdates;
     }
 
+    /** Calcola il costo delle modifiche: 0,35 crediti per cella. */
     private calculateUpdateCost(numberOfCells: number): number {
         return Number((0.35 * numberOfCells).toFixed(2));
     }
 
+    /**
+     * Registra la richiesta e tutte le modifiche nella stessa transazione.
+     * Il proprietario genera una richiesta auto; gli altri utenti una pending.
+     */
     private async createUpdateRequestRecord(
         userId: number,
         model: GridModel,
@@ -488,17 +533,23 @@ export class UpdateRequestService {
         return request;
     }
 
+    /**
+     * Applica le modifiche su una copia della matrice, invalida la versione
+     * precedente e crea la versione successiva all'interno della transazione.
+     */
     private async applyDirectUpdate(
         model: GridModel,
         cellUpdates: PreparedCellUpdate[],
         transaction: Transaction
     ): Promise<GridModel> {
+        // Copia righe e matrice per non modificare direttamente quella originale.
         const newMatrix = model.matrix.map(row => [...row]);
 
         for (const update of cellUpdates) {
             newMatrix[update.row][update.column] = update.newValue;
         }
 
+        // Solo la nuova versione risulta valida dopo il salvataggio.
         model.valid = false;
 
         await this.gridModelDAO.save(model, transaction);
@@ -518,6 +569,7 @@ export class UpdateRequestService {
         );
     }
 
+    /** Ricerca e blocca una richiesta pending nella transazione corrente. */
     private async findPendingRequest(
         requestId: number,
         transaction: Transaction
@@ -538,6 +590,7 @@ export class UpdateRequestService {
         return request;
     }
 
+    /** Recupera con lock il record della versione a cui si riferisce la richiesta. */
     private async findRequestModel(
         gridModelId: number,
         transaction: Transaction
@@ -558,6 +611,7 @@ export class UpdateRequestService {
         return model;
     }
 
+    /** Impedisce agli utenti diversi dal proprietario di decidere sulla richiesta. */
     private checkModelOwner(
         model: GridModel,
         ownerId: number
@@ -570,6 +624,7 @@ export class UpdateRequestService {
         }
     }
 
+    /** Recupera le modifiche associate, rifiutando richieste senza celle. */
     private async findRequestUpdates(
         requestId: number,
         transaction: Transaction
@@ -589,6 +644,7 @@ export class UpdateRequestService {
         return updates;
     }
 
+    /** Converte i record Update nel formato usato dalla logica applicativa. */
     private prepareStoredUpdates(
         updates: Update[]
     ): PreparedCellUpdate[] {

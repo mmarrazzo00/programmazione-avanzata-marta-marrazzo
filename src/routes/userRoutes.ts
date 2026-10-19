@@ -1,4 +1,3 @@
-
 import {
     Router,
     Request,
@@ -18,12 +17,18 @@ import { validate } from '../middleware/validate.js';
 import { verifyJwt } from '../middleware/verifyJwt.js';
 import { requireRole } from '../middleware/requireRole.js';
 
+// Crea il router Express dedicato alla gestione degli utenti.
 const router = Router();
 
+// Istanzia il controller responsabile delle operazioni sugli utenti.
 const userController = new UserController();
 
-// REGISTRAZIONE PUBBLICA
-// Non richiede autenticazione.
+/**
+ * POST /users
+ *
+ * Registra un nuovo utente senza richiedere autenticazione.
+ * Applica le regole di validazione prima di eseguire la creazione.
+ */
 router.post(
     '/users',
     createUserRules,
@@ -32,8 +37,12 @@ router.post(
         userController.createUser(req, res, next)
 );
 
-// ELENCO UTENTI
-// Solo amministratore.
+/**
+ * GET /users
+ *
+ * Restituisce l'elenco degli utenti registrati.
+ * L'accesso è riservato agli amministratori autenticati.
+ */
 router.get(
     '/users',
     verifyJwt,
@@ -42,8 +51,14 @@ router.get(
         userController.getAllUsers(req, res, next)
 );
 
-// RICARICA CREDITI
-// Solo amministratore.
+/**
+ * PATCH /users/credit
+ *
+ * Permette all'amministratore di modificare il saldo
+ * dei crediti di un utente.
+ *
+ * Richiede autenticazione, ruolo admin e validazione dei dati.
+ */
 router.patch(
     '/users/credit',
     verifyJwt,
@@ -54,8 +69,12 @@ router.patch(
         userController.updateCredit(req, res, next)
 );
 
-// CONSULTAZIONE UTENTE
-// Solo amministratore.
+/**
+ * GET /users/:id
+ *
+ * Recupera i dati di un utente tramite identificativo.
+ * L'accesso è riservato agli amministratori autenticati.
+ */
 router.get(
     '/users/:id',
     verifyJwt,
@@ -64,8 +83,12 @@ router.get(
         userController.getUserById(req, res, next)
 );
 
-// MODIFICA UTENTE
-// Solo amministratore.
+/**
+ * PATCH /users/:id
+ *
+ * Permette all'amministratore di modificare i dati di un utente.
+ * Applica le regole di validazione prima dell'aggiornamento.
+ */
 router.patch(
     '/users/:id',
     verifyJwt,
@@ -76,8 +99,12 @@ router.patch(
         userController.updateUser(req, res, next)
 );
 
-// ELIMINAZIONE UTENTE
-// Solo amministratore.
+/**
+ * DELETE /users/:id
+ *
+ * Elimina un utente tramite identificativo.
+ * L'operazione è riservata agli amministratori autenticati.
+ */
 router.delete(
     '/users/:id',
     verifyJwt,
