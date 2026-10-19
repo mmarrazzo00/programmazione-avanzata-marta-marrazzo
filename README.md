@@ -572,7 +572,7 @@ I due pattern affrontano problemi progettuali differenti.
 
 Il **DAO** consente di isolare le operazioni di accesso al database dalla logica applicativa, mentre il **Chain of Responsibility** permette di organizzare l'elaborazione delle richieste HTTP mediante componenti successivi con responsabilità distinte.
 
-La loro applicazione contribuisce a rendere la Pathfinding API più modulare, manutenibile e facilmente estendibile.
+La loro applicazione contribuisce a rendere la Pathfinding API più modulare e manutenibile.
 
 ---
 
